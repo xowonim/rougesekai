@@ -15,3 +15,12 @@ showBk=function(el){if(!S.mats[el.dataset.bk]||S.mats[el.dataset.bk]<=0){closeBk
 /* 오타 정정 */
 REG.glisha.name='글리샬라볼라스';
 CHM.aledeia.sk[0]=A('염탐','생명체의 몸 속에 깃들어 염탐한다.',40);
+
+/* 캐릭터 창 순서: 이름·기본정보 → 경험치바 → INFO | VIRTUE | PROFILE → 내용 */
+const _det12=detHtml;
+detHtml=function(id,train){let h=_det12(id,train);if(!train)return h;
+ const tm=h.match(/<div class="tabs">.*?<\/div>/s);if(!tm)return h;
+ const o=S.chars[id];
+ h=h.replace(/<div class="xpb">.*?<\/div>/s,'');
+ const bar=o?`<div class="xpb"><i style="width:${o.lv>=CFG.LV_MAX?100:Math.round(o.exp/expNeed(o.lv)*100)}%"></i></div>`:'';
+ return h.replace(tm[0],bar+tm[0])};
