@@ -21,17 +21,21 @@ function ensureChar(id){const o=S.chars[id],c=CHM[id];if(!o||!c)return;
  while(o.sk.length<c.sk.length)o.sk.push({lv:1,exp:0})}
 function freshSave(){return{coin:CFG.START_COIN,ap:0,chars:{luihu:newChar(),cheonryong:newChar()},
  mats:{ls:3,lm:0,ll:0,ss:3,sm:0,sl:0},best:0,runs:0,party:['luihu','cheonryong']}}
-function load(){try{const r=localStorage.getItem(KEY);S=r?JSON.parse(r):freshSave()}catch(e){S=freshSave()}
+function normalize(){
  const f=freshSave();for(const k in f)if(S[k]===undefined)S[k]=f[k];
  for(const k in f.mats)if(S.mats[k]===undefined)S.mats[k]=0;
- for(const id in S.chars)ensureChar(id)}
+ for(const id in S.chars){if(!CHM[id])delete S.chars[id];else ensureChar(id)}
+ S.party=S.party.filter(id=>S.chars[id])}
+function load(){try{const r=localStorage.getItem(KEY);S=r?JSON.parse(r):freshSave()}catch(e){S=freshSave()}normalize()}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
 const $=id=>document.getElementById(id);
 function josa(w,p){const c=w.charCodeAt(w.length-1);const has=c>=0xAC00&&c<=0xD7A3&&((c-0xAC00)%28)!==0;const[a,b]=p.split('/');return w+(has?a:b)}
 const stars=n=>'★'.repeat(n);
-const imgTag=ch=>`<img src="chars/${ch.id}.png" alt="" onerror="this.remove()">`;
+/* 이미지: chars/icon(아이콘) · chars/full(아카이브 전신) · chars/battle(전투) / <id>.png */
+const IMG=(dir,ch)=>`<img src="chars/${dir}/${ch.id}.png" alt="" onerror="this.remove()">`;
+const imgTag=ch=>IMG('icon',ch);
 const hpColor=r=>r>.5?'#8fd49b':r>.2?'#e8c870':'#e0705a';
 
 /* 아이콘 */
@@ -39,14 +43,31 @@ const TG=`<svg class="ic" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" f
 const AP=`<svg class="ic" viewBox="0 0 100 100"><circle cx="50" cy="56" r="38" fill="#f0a24a"/><path d="M50 22C50 40 50 60 50 94" stroke="#c9782c" stroke-width="4" fill="none" opacity=".6"/><path d="M52 20C58 4 76 2 84 8C80 22 64 26 52 20Z" fill="#7fc08a"/></svg>`;
 const wallet=()=>`<div class="wallet"><span>${TG}${S.coin.toLocaleString()}</span><span>${AP}${S.ap.toLocaleString()}</span></div>`;
 
-function fx(s,lv){const k=skMul(lv),p=Math.round((s.p||0)*k),a=[];
- if(s.t==='a'){a.push('위력 '+p);if(s.stun)a.push('기절 '+s.stun+'%');if(s.drain)a.push('흡혈');if(s.recoil)a.push('반동');if(s.dot)a.push('지속');if(s.ign)a.push('방어 무시');if(s.acc&&s.acc<95)a.push('명중 '+s.acc+'%');if(s.selfStun)a.push('다음 턴 정지')}
- else if(s.t==='h')a.push('회복 '+p+'%');
- else if(s.t==='b')a.push('공격 +'+p+'%');
- else if(s.t==='g')a.push('방어 +'+p+'%');
- else if(s.t==='w')a.push('상대 공방 -'+p+'%');
- else if(s.t==='z')a.push('다음 공격 회피');
- return a.join(' · ')}
+/* 아이콘 (img/skill/<캐릭터id>_<번호>.png, img/item/<키>.png 가 있으면 그 그림으로 대체) */
+const SVGP={
+ single:'<circle cx="12" cy="12" r="6"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+ area:'<circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="12" r="6.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2 2M17.4 17.4l2 2M19.4 4.6l-2 2M6.6 17.4l-2 2"/>',
+ evade:'<path d="M3 9h10a3 3 0 1 0-3-3M3 15h14a3 3 0 1 1-3 3M3 12h6"/>',
+ heal:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/>',
+ buff:'<path d="M12 20V5M6 11l6-6 6 6"/>',
+ guard:'<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/>',
+ debuff:'<path d="M12 4v15M6 13l6 6 6-6"/>',
+ stun:'<path d="M12 3a9 9 0 1 0 9 9 6 6 0 1 0-6 6 3 3 0 1 0-3-3"/>',
+ shock:'<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>',
+ trn:'<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/><circle cx="12" cy="9" r="2"/>',
+ skb:'<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/><path d="M12 6.5l2.5 2.5-2.5 2.5-2.5-2.5z"/>'};
+const svg=k=>`<svg class="si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${SVGP[k]}</svg>`;
+const skKind=s=>s.t==='a'?(s.sc==='범위'?'area':'single'):s.t==='h'?'heal':s.t==='b'?'buff':s.t==='g'?'guard':s.t==='w'?'debuff':'evade';
+const picOver=src=>`<img src="${src}" alt="" onload="this.previousSibling.style.display='none'" onerror="this.remove()">`;
+const skIcon=(ch,i,s)=>`<span class="sic">${svg(skKind(s))}${i>=0?picOver(`img/skill/${ch.id}_${i+1}.png`):''}</span>`;
+const BOOKSZ={s:.8,m:1,l:1.2};
+const bookIcon=k=>`<span class="sic bk" style="--z:${BOOKSZ[k[1]]}">${svg(k[0]==='l'?'trn':'skb')}${picOver('img/item/'+k+'.png')}</span>`;
+const stHtml=s=>(s.stun?`<span title="">${svg('stun')}</span>`:'')+(s.shock?`<span>${svg('shock')}</span>`:'')+(s.ev?`<span>${svg('evade')}</span>`:'');
+
+function fx(s,lv){const p=Math.round((s.p||0)*skMul(lv));
+ const kind=s.t==='a'?(s.sc==='범위'?'범위 공격':'단일 공격'):s.t==='w'?'적 변화':'자기 변화';
+ const acc=s.t==='a'?(s.acc!==undefined?s.acc:95):100;
+ return `${kind} · 위력 ${s.t==='a'?p:'-'} · 명중 ${acc}`}
 
 /* =====================================================================
    전투 로직
@@ -55,7 +76,7 @@ let run=null,busy=false,skipFn=null,lastHp={};
 function newFighter(ch,lv,bt,side,mult,sl){const s=calcStats(ch,lv,bt);mult=mult||{};const k=mult.all||1;
  const f={ch,lv,side,sl:sl||[],maxhp:Math.round(s.hp*(mult.hp||1)*k),atk:s.atk*(mult.atk||1)*k,def:s.def*(mult.def||1)*k,spd:s.spd,hp:0};
  f.hp=f.maxhp;resetBattleState(f);return f}
-function resetBattleState(f){f.m={atk:0,def:0};f.mT=0;f.d={atk:0,def:0};f.dT=0;f.evade=0;f.stun=0;f.stunImm=0;f.dot=null;
+function resetBattleState(f){f.m={atk:0,def:0};f.mT=0;f.d={atk:0,def:0};f.dT=0;f.evade=0;f.stun=0;f.stunImm=0;f.rest=0;f.shock=false;f.shockT=0;f.dot=null;
  f.pp=f.ch.sk.map((s,i)=>(i===0&&s.t==='a')?Infinity:(s.pp||defPP(s)))}
 function st(f,k){let v=f[k];if(f.side==='p'&&run)v*=1+run.buf[k];
  if(k==='atk'||k==='def')v*=Math.max(.4,1+f.m[k]-f.d[k]);return v}
@@ -84,7 +105,8 @@ function nextBattle(){
  drawBattle()}
 
 function snap(){const P=run.party[run.active],E=run.enemy;
- return{p:{id:P.ch.id,name:P.ch.name,hp:P.hp,max:P.maxhp,lv:P.lv},e:{hp:E.hp,max:E.maxhp}}}
+ const fl=f=>({stun:f.stun>0,shock:!!f.shock,ev:f.evade>0});
+ return{p:{id:P.ch.id,name:P.ch.name,hp:P.hp,max:P.maxhp,lv:P.lv,st:fl(P)},e:{hp:E.hp,max:E.maxhp,st:fl(E)}}}
 
 function hitCalc(a,d,sk,k){
  const def=st(d,'def')*(1-(sk.ign||0));
@@ -95,20 +117,25 @@ function hitCalc(a,d,sk,k){
 function perform(a,d,idx,ev){
  const say=(t,pop)=>ev.push({t,s:snap(),pop});
  const sk=idx<0?BASIC:a.ch.sk[idx],k=skMul(slv(a,idx));
- if(a.stun>0){a.stun--;a.stunImm=1;say(`${josa(a.ch.name,'은/는')} 움직이지 못한다.`);return}
+ if(a.rest>0){a.rest--;say(`${josa(a.ch.name,'은/는')} 숨을 고른다.`);return}
+ if(a.stun>0){
+  if(Math.random()<CFG.STUN_WAKE){a.stun=0;a.stunImm=1;say(`${josa(a.ch.name,'은/는')} 정신을 차렸다.`)}
+  else{say(`${josa(a.ch.name,'은/는')} 움직이지 못한다.`);return}}
  if(idx>=0)a.pp[idx]--;
  say(`${a.ch.name}의 ${sk.n}`);
  if(sk.t==='a'){
-  if(Math.random()*100>=(sk.acc||95)){say('빗나갔다.');return}
-  if(d.evade>0){d.evade=0;say(`${josa(d.ch.name,'은/는')} 공격을 피했다.`);return}
+  const acc=(sk.acc!==undefined?sk.acc:95)-(a.shock?50:0);
+  if(d.evade>0){say(`${josa(d.ch.name,'은/는')} 공격을 피했다.`);return}
+  if(Math.random()*100>=acc){say('빗나갔다.');return}
   const h=hitCalc(a,d,sk,k);
   d.hp=Math.max(0,d.hp-h.dmg);
   say(`${d.ch.name}에게 ${h.dmg} 피해`+(h.crit?' · 치명타':''),{side:d.side,v:'-'+h.dmg});
   if(sk.drain&&a.hp>0){const g=Math.round(h.dmg*.5);a.hp=Math.min(a.maxhp,a.hp+g);say(`${a.ch.name} HP ${g} 흡수`,{side:a.side,v:'+'+g,heal:1})}
   if(sk.recoil&&a.hp>0){const r=Math.round(h.dmg*sk.recoil/100);a.hp=Math.max(0,a.hp-r);say(`${a.ch.name} 반동 ${r}`,{side:a.side,v:'-'+r})}
-  if(d.hp>0&&sk.stun&&d.stun<=0&&!d.stunImm&&Math.random()*100<sk.stun){d.stun=1;say(`${josa(d.ch.name,'은/는')} 움직일 수 없다.`)}
+  if(d.hp>0&&sk.stun&&d.stun<=0&&(sk.stun>=100||!d.stunImm)&&Math.random()*100<sk.stun){d.stun=1;say(`${josa(d.ch.name,'은/는')} 기절했다.`)}
+  if(d.hp>0&&sk.shock&&!d.shock){d.shock=true;d.shockT=0;say(`${josa(d.ch.name,'은/는')} 감전되었다.`)}
   if(d.hp>0&&sk.dot){d.dot={pct:sk.dot,t:3};say(`${josa(d.ch.name,'은/는')} 지속 피해를 입는다.`)}
-  if(sk.selfStun&&a.hp>0)a.stun=1;
+  if(sk.selfStun&&a.hp>0)a.rest=1;
  }else if(sk.t==='h'){
   const g=Math.round(a.maxhp*sk.p*k/100),before=a.hp;a.hp=Math.min(a.maxhp,a.hp+g);
   a.d={atk:0,def:0};a.dT=0;a.dot=null;
@@ -116,7 +143,7 @@ function perform(a,d,idx,ev){
  }else if(sk.t==='b'){a.m.atk=Math.max(a.m.atk,sk.p*k/100);a.mT=3;say(`${a.ch.name} 공격 상승`)}
  else if(sk.t==='g'){a.m.def=Math.max(a.m.def,sk.p*k/100);a.mT=3;say(`${a.ch.name} 방어 상승`)}
  else if(sk.t==='w'){d.d.atk=Math.max(d.d.atk,sk.p*k/100);d.d.def=Math.max(d.d.def,sk.p*k/100);d.dT=3;say(`${d.ch.name} 공방 하락`)}
- else if(sk.t==='z'){a.evade=2;say(`${josa(a.ch.name,'은/는')} 다음 공격에 대비한다.`)}
+ else if(sk.t==='z'){a.evade=2;say(`${josa(a.ch.name,'은/는')} 회피 태세에 들어간다.`)}
 }
 
 function aiPick(e,p){
@@ -141,6 +168,7 @@ function endOfTurn(ev){
   if(f.dT>0&&--f.dT<=0)f.d={atk:0,def:0};
   if(f.evade>0)f.evade--;
   if(f.stunImm>0)f.stunImm--;
+  if(f.hp>0&&f.shock){if(f.shockT>=1&&Math.random()<CFG.SHOCK_FREE){f.shock=false;say(`${josa(f.ch.name,'은/는')} 감전에서 풀렸다.`)}f.shockT++}
  })}
 
 function doTurn(action){
@@ -154,6 +182,8 @@ function doTurn(action){
  }else{
   const ps=st(P(),'spd'),es=st(E,'spd');
   order=(ps>es||(ps===es&&Math.random()<.5))?['p','e']:['e','p'];
+  if(P().shock&&!E.shock)order=['e','p'];
+  else if(E.shock&&!P().shock)order=['p','e'];
  }
  let result='cont';
  for(const who of order){
@@ -258,7 +288,7 @@ function pull(n){
  if(S.coin<cost){flashWallet();return}
  S.coin-=cost;const res=pullMany(n);save();
  const cells=res.map(r=>r.kind==='mat'
-  ?`<div class="rc"><div class="tile" style="--c:#c4c9d4"><b>書</b></div>${BOOK[r.k].n}</div>`
+  ?`<div class="rc"><div class="tile" style="--c:#c4c9d4">${bookIcon(r.k)}</div>${BOOK[r.k].n}</div>`
   :`<div class="rc r${r.ch.star}"><div class="tile" style="--c:${EC[r.ch.el]}"><b>${r.ch.name[0]}</b>${imgTag(r.ch)}</div>${r.ch.name}<small>${r.tag}</small></div>`).join('');
  toGacha();
  $('ovl').innerHTML=`<div class="ov" onclick="toGacha()"><div class="res" style="${n===1?'grid-template-columns:4.2em':''}">${cells}</div></div>`}
@@ -286,26 +316,41 @@ function toTitle(){
 /* ---- SETTING ---- */
 function toSet(){
  show(`<div class="bg mist"></div>
- <div class="menu" style="top:40%"><button class="tb" onclick="resetAsk()">저장 데이터 초기화</button></div>
+ <div class="menu" style="top:38%"><button class="tb" id="bSave" onclick="exportSave()">SAVE</button><button class="tb" id="bLoad" onclick="importSave()">LOAD</button></div>
  <div class="back"><button class="tb" onclick="toTitle()">BACK</button></div>`)}
-function resetAsk(){if(confirm('저장 데이터를 모두 지웁니다.')){try{localStorage.removeItem(KEY)}catch(e){}S=freshSave();save();toTitle()}}
+function tell(id,t){const b=$(id);if(!b)return;const o=b.textContent;b.textContent=t;setTimeout(()=>{const x=$(id);if(x)x.textContent=o},1200)}
+function exportSave(){
+ try{const blob=new Blob([JSON.stringify({v:2,s:S})],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='kamisekai_save.json';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1500);tell('bSave','OK')}catch(e){tell('bSave','ERROR')}}
+function importSave(){
+ const i=document.createElement('input');i.type='file';i.accept='.json,application/json';
+ i.onchange=()=>{const f=i.files&&i.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result),s=d.s||d;if(!s||!s.chars||typeof s.coin!=='number')throw 0;S=s;normalize();save();tell('bLoad','OK')}catch(e){tell('bLoad','ERROR')}};
+  r.readAsText(f)};
+ i.click()}
 
 /* ---- 상세 패널 ---- */
+let arcTab='info';
+function skRows(c,o,train){
+ return c.sk.map((k,i)=>{const sl=(o&&o.sk[i])||{lv:1,exp:0};
+  const bt=(train&&o)?`<div class="bt">${['ss','sm','sl'].map(b=>`<button class="mini" ${S.mats[b]>0&&sl.lv<CFG.SK_MAX?'':'disabled'} onclick="useSk('${c.id}',${i},'${b}')">${bookIcon(b)}</button>`).join('')}</div>`:'';
+  return `<div class="sk"><b>${skIcon(c,i,k)}<em>${'①②③'[i]}</em> ${k.n}${o?`<i>Lv.${sl.lv}</i>`:''}</b>${bt}<span>${fx(k,sl.lv)}</span></div>`}).join('')}
 function detHtml(id,train){
  const c=CHM[id],o=S.chars[id];
- const head=(o)=>`<div class="dh">${tileHtml(c)}<div><div class="nm">${c.name}</div><div class="sub">${c.race} · ${c.el} · <span class="star">${stars(c.star)}</span></div>${o?`<div class="sub">Lv.${o.lv} · 돌파 ${o.bt}/${CFG.BT_MAX}</div>`:''}</div></div>`;
+ const head=`<div class="dh">${train?'':tileHtml(c)}<div><div class="nm">${c.name}</div><div class="sub"><span class="star">${stars(c.star)}</span>${o?` · Lv.${o.lv} · 돌파 ${o.bt}/${CFG.BT_MAX}`:''}</div></div></div>`;
+ const tabs=train?`<div class="row"><button class="mini ${arcTab==='info'?'on':''}" onclick="arcT('info')">INFO</button><button class="mini ${arcTab==='lore'?'on':''}" onclick="arcT('lore')">PROFILE</button></div>`:'';
+ if(train&&arcTab==='lore')return head+tabs+`<div class="sub" style="line-height:1.8">${c.race}<br>${c.el}${LORE[id]?'<br><br>'+LORE[id]:''}</div>`;
  if(!o){
   const price=CFG.AP_CHAR[c.star];
-  return head(null)+c.sk.map((k,i)=>`<div class="sk"><b>${'①②③'[i]} ${k.n}</b><span>${fx(k,1)}</span></div>`).join('')
+  return head+tabs+skRows(c,null,false)
    +(train&&price?`<div class="row"><button class="mini" ${S.ap>=price?'':'disabled'} onclick="buyChar('${id}')">${AP} ${price}</button></div>`:'')}
  const s=calcStats(c,o.lv,o.bt),need=expNeed(o.lv),pct=o.lv>=CFG.LV_MAX?100:Math.round(o.exp/need*100);
- let h=head(o)+`<div class="xpb"><i style="width:${pct}%"></i></div>
+ let h=head+tabs+`<div class="xpb"><i style="width:${pct}%"></i></div>
  <div class="st"><span>HP<b>${s.hp}</b></span><span>공격<b>${s.atk}</b></span><span>방어<b>${s.def}</b></span><span>속도<b>${s.spd}</b></span></div>`;
- if(train)h+=`<div class="row">${['ls','lm','ll'].map(k=>`<button class="mini" ${S.mats[k]>0&&o.lv<CFG.LV_MAX?'':'disabled'} onclick="useBook('${id}','${k}')">수련 ${SZ[k[1]]} ${S.mats[k]}</button>`).join('')}</div>`;
- h+=c.sk.map((k,i)=>{const sl=o.sk[i]||{lv:1,exp:0};
-  const bt=train?`<div class="bt">${['ss','sm','sl'].map(b=>`<button class="mini" ${S.mats[b]>0&&sl.lv<CFG.SK_MAX?'':'disabled'} onclick="useSk('${id}',${i},'${b}')">${SZ[b[1]]}</button>`).join('')}</div>`:'';
-  return `<div class="sk"><b>${'①②③'[i]} ${k.n}<i>Lv.${sl.lv}</i></b>${bt}<span>${fx(k,sl.lv)}</span></div>`}).join('');
- return h}
+ if(train)h+=`<div class="row">${['ls','lm','ll'].map(k=>`<button class="mini" ${S.mats[k]>0&&o.lv<CFG.LV_MAX?'':'disabled'} onclick="useBook('${id}','${k}')">${bookIcon(k)} ${S.mats[k]}</button>`).join('')}</div>`;
+ return h+skRows(c,o,train)}
+function arcT(t){arcTab=t;drawArc()}
 
 /* ---- START ---- */
 function toPrep(){
@@ -330,14 +375,16 @@ function drop(i){party.splice(i,1);drawPrep()}
 function start(){S.party=party.slice();save();startRun(party.slice())}
 
 /* ---- ARCHIVES ---- */
-function toArc(){mode='arc';cur=S.chars[cur]?cur:'luihu';drawArc()}
+function toArc(){mode='arc';arcTab='info';cur=S.chars[cur]?cur:'luihu';drawArc()}
 function drawArc(){
  const gs=$('pgrid')?$('pgrid').scrollTop:0,ds=$('pdet')?$('pdet').scrollTop:0;
  const tiles=CH.map(c=>{const o=S.chars[c.id];
   return `<div class="tile ${o?'':'lk'} ${cur===c.id?'sel':''}" style="--c:${EC[c.el]}" onclick="arcPick('${c.id}')"><b>${c.name[0]}</b>${imgTag(c)}${o?`<em>${o.lv}</em>`:''}</div>`}).join('');
- const m=S.mats,mats=`<div class="mats"><span>${['ls','lm','ll'].map(k=>`${SZ[k[1]]}<b>${m[k]}</b>`).join(' ')}<br>수련의 서</span><span>${['ss','sm','sl'].map(k=>`${SZ[k[1]]}<b>${m[k]}</b>`).join(' ')}<br>오덕의 서</span></div>`;
- show(`<div class="bg dark"></div>${wallet()}<div class="tiles" id="pgrid" style="top:9%;bottom:21%">${tiles}</div><div class="det" id="pdet" style="top:9%">${detHtml(cur,true)}</div>
- <div class="bar">${mats}<div class="sp"></div><button class="tb" onclick="toTitle()">BACK</button></div>`);
+ const c=CHM[cur],o=S.chars[cur];
+ const full=`<div class="afull ${o?'':'lk'}" style="--c:${EC[c.el]}"><b>${c.name[0]}</b>${IMG('full',c)}</div>`;
+ const m=S.mats,grp=ks=>`<span>${ks.map(k=>`${bookIcon(k)}<b>${m[k]}</b>`).join('')}</span>`;
+ show(`<div class="bg dark"></div>${wallet()}<div class="tiles alist" id="pgrid">${tiles}</div>${full}<div class="det adet" id="pdet">${detHtml(cur,true)}</div>
+ <div class="bar"><div class="mats">${grp(['ls','lm','ll'])}${grp(['ss','sm','sl'])}</div><div class="sp"></div><button class="tb" onclick="toTitle()">BACK</button></div>`);
  $('pgrid').scrollTop=gs;$('pdet').scrollTop=ds}
 function arcPick(id){cur=id;drawArc()}
 function useBook(id,k){if(S.mats[k]<=0)return;S.mats[k]--;addExp(id,BOOK[k].x);save();drawArc()}
@@ -352,10 +399,10 @@ function drawBattle(){
  const m=mapOf(run.wave),E=run.enemy,P=run.party[run.active];
  show(`<div class="bg" id="bgm" style="background-image:linear-gradient(170deg,${m.g[0]},${m.g[1]})"></div><div class="veil"></div>
  <div class="where">${m.name} · ${run.wave}</div><div class="gline"></div>
- <div class="cb" id="eC"><div class="pop" id="ePop"></div><div class="pf" id="ePF" style="--c:${EC[E.ch.el]}"><b>${E.ch.name[0]}</b>${imgTag(E.ch)}</div>
-  <div class="who"><span>${E.ch.name}</span><span>Lv.${E.lv}</span></div><div class="hpl"><i id="eBar"></i></div><div class="hn" id="eHn"></div></div>
+ <div class="cb" id="eC"><div class="pop" id="ePop"></div><div class="pf" id="ePF" style="--c:${EC[E.ch.el]}"><b>${E.ch.name[0]}</b>${IMG('battle',E.ch)}</div>
+  <div class="who"><span>${E.ch.name}</span><span>Lv.${E.lv}</span></div><div class="hpl"><i id="eBar"></i></div><div class="hn" id="eHn"></div><div class="stt" id="eSt"></div></div>
  <div class="cb" id="pC"><div class="pop" id="pPop"></div><div class="pf" id="pPF"></div>
-  <div class="who"><span id="pNm"></span><span id="pLv"></span></div><div class="hpl"><i id="pBar"></i></div><div class="hn" id="pHn"></div></div>
+  <div class="who"><span id="pNm"></span><span id="pLv"></span></div><div class="hpl"><i id="pBar"></i></div><div class="hn" id="pHn"></div><div class="stt" id="pSt"></div></div>
  <div id="cap"></div><div id="cards"></div><div id="sideL" class="side l"></div><div id="sideR" class="side r"></div><div id="ovl"></div>`);
  const s=snap();lastHp={e:s.e.hp,p:s.p.hp,id:s.p.id};
  $('pPF').dataset.id='';
@@ -369,9 +416,10 @@ function paintInfo(s,fl,popv){
  $('eBar').style.width=er*100+'%';$('eBar').style.background=hpColor(er);
  $('pBar').style.width=pr*100+'%';$('pBar').style.background=hpColor(pr);
  $('eHn').textContent=`${s.e.hp} / ${s.e.max}`;$('pHn').textContent=`${s.p.hp} / ${s.p.max}`;
+ $('eSt').innerHTML=stHtml(s.e.st||{});$('pSt').innerHTML=stHtml(s.p.st||{});
  $('pNm').textContent=s.p.name;$('pLv').textContent='Lv.'+s.p.lv;
  const ps=$('pPF');
- if(ps.dataset.id!==s.p.id){const c=CHM[s.p.id];ps.dataset.id=s.p.id;ps.style.setProperty('--c',EC[c.el]);ps.innerHTML=`<b>${c.name[0]}</b>${imgTag(c)}`}
+ if(ps.dataset.id!==s.p.id){const c=CHM[s.p.id];ps.dataset.id=s.p.id;ps.style.setProperty('--c',EC[c.el]);ps.innerHTML=`<b>${c.name[0]}</b>${IMG('battle',c)}`}
  if(fl){if(lastHp.e>s.e.hp)flash('ePF');if(lastHp.id===s.p.id&&lastHp.p>s.p.hp)flash('pPF');if(popv)pop(popv.side==='e'?'e':'p',popv.v,popv.heal)}
  $('ePF').classList.toggle('ko',s.e.hp<=0);ps.classList.toggle('ko',s.p.hp<=0);
  lastHp={e:s.e.hp,p:s.p.hp,id:s.p.id}}
@@ -384,7 +432,7 @@ function paintMenu(){
   setCap(run.note||'');
   const opts=[];if(!(P.ch.sk[0]&&P.ch.sk[0].t==='a'))opts.push(-1);P.ch.sk.forEach((s,i)=>opts.push(i));
   cards.innerHTML=opts.map(i=>{const s=i<0?BASIC:P.ch.sk[i],l=slv(P,i);
-   return `<button class="sc" ${i>=0&&P.pp[i]<=0?'disabled':''} onclick="act(${i})"><em>${i<0?'·':'①②③'[i]}</em><b>${s.n}</b><span>${i<0?'위력 '+BASIC.p:fx(s,l)}</span><small>${i<0||P.pp[i]===Infinity?'∞':P.pp[i]+'/'+s.pp}</small></button>`}).join('');
+   return `<button class="sc" ${i>=0&&P.pp[i]<=0?'disabled':''} onclick="act(${i})"><em>${i<0?svg('single'):skIcon(P.ch,i,s)}</em><b>${s.n}</b><span>${i<0?fx(BASIC,1):fx(s,l)}</span><small>${i<0||P.pp[i]===Infinity?'∞':P.pp[i]+'/'+s.pp}</small></button>`}).join('');
   $('sideL').innerHTML=`<button class="tb" onclick="openParty(false)">교체</button>`;
   $('sideR').innerHTML=`<button class="tb" onclick="quitRun()">철수</button>`}
  else if(ph==='forced'){setCap('');openParty(true)}
