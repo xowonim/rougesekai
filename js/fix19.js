@@ -17,7 +17,7 @@ function poseApply(sd){
  const ko=el.classList.contains('ko');
  if(ko)pose='ko';else if(PST[sd].pose&&Date.now()<PST[sd].t)pose=PST[sd].pose;
  const u=m[pose]||m.base||null;
- el.classList.toggle('kp',!!(ko&&m.ko));
+ el.classList.toggle('kp',!!(ko&&(m.ko||m.base)));
  let im=el.querySelector('img');
  if(!u){if(im&&m.base===null&&PMAP[id]&&!/\/[^/]+\.png$/.test(im.getAttribute('src')||''))im.remove();return}
  if(!im){im=document.createElement('img');im.alt='';el.appendChild(im)}
