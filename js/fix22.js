@@ -13,3 +13,6 @@ detHtml=function(id,train){let h=_det22(id,train);
  if(id==='jeong')h=h.replace(/<div class="row"><button class="mini"[^>]*buyChar.*?<\/div>/s,'');return h};
 const _buy22=buyChar;
 buyChar=function(id){if(id==='jeong')return;_buy22(id)};
+
+/* ★6 확률 0.6% -> 0.5% (줄어든 몫은 재료로) */
+RATE[6]=.5;
