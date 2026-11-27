@@ -12,13 +12,13 @@ const BOOK={
  ls:{n:'수련의 서 소',x:100},lm:{n:'수련의 서 중',x:350},ll:{n:'수련의 서 대',x:1000},
  ss:{n:'오행의 기운 소',x:30},sm:{n:'오행의 기운 중',x:100},sl:{n:'오행의 기운 대',x:300}};
 const SZ={s:'소',m:'중',l:'대'};
-/* MP: 최대 100, 전투 시작 시 지급, 턴 종료마다 회복. ①번 공격은 소모 없음 */
-const MP_MAX=100;
+/* MP: 전투가 끝나도 유지된다. 자동 회복 없음. 기술을 쓰면 줄고, 기본 공격(①번)으로 조금씩 채운다 */
+const MP_BASE=100,MP_WIN=25,MP_CARD=40;
 function mpCost(s,i){if(s.mp!==undefined)return s.mp;if(i<0)return 0;if(i===0&&s.t==='a')return 0;
- if(s.t==='a')return s.p<50?10:s.p<70?12:s.p<100?18:28;if(s.t==='h')return 15;return 12}
+ if(s.t==='a')return s.p<50?8:s.p<70?12:s.p<100?16:24;if(s.t==='h')return 14;return 10}
 /* 돌파: 매 단계 능력치 +8%, 단계별 추가 효과 */
-const BT_X=['','시작 MP +10','스킬 위력 +5%','MP 회복 +3','스킬 위력 +5%','시작 MP +10 · MP 회복 +2'];
-function btFx(bt){bt=bt||0;return{pow:1+(bt>=3?.05:0)+(bt>=5?.05:0),mp:60+(bt>=2?10:0)+(bt>=6?10:0),reg:25+(bt>=4?3:0)+(bt>=6?2:0)}}
+const BT_X=['','최대 MP +10','스킬 위력 +5%','기본 공격 MP +3','스킬 위력 +5%','최대 MP +10 · 기본 공격 MP +2'];
+function btFx(bt){bt=bt||0;return{pow:1+(bt>=3?.05:0)+(bt>=5?.05:0),max:MP_BASE+(bt>=2?10:0)+(bt>=6?10:0),gain:20+(bt>=4?3:0)+(bt>=6?2:0)}}
 
 const KEY='kamisekai_rogue_v2';
 let S;
@@ -40,33 +40,49 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
 const $=id=>document.getElementById(id);
 function josa(w,p){const c=w.charCodeAt(w.length-1);const has=c>=0xAC00&&c<=0xD7A3&&((c-0xAC00)%28)!==0;const[a,b]=p.split('/');return w+(has?a:b)}
-const rank=n=>`<b class="rk">${n}</b>`;
+const rank=n=>`<b class="rk">★${n}</b>`;
 /* 이미지: chars/icon(아이콘) · chars/full(아카이브 전신) · chars/battle(전투) / <id>.png */
 const IMG=(dir,ch)=>`<img src="chars/${dir}/${ch.id}.png" alt="" onerror="this.remove()">`;
 const imgTag=ch=>IMG('icon',ch);
-/* 효과음: 파일 없이 합성 */
-let AC=null;
-function ac(){try{if(!S||!S.sfx)return null;AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
-function tone(f,d,type,v,to,at){const c=ac();if(!c)return;try{const t=c.currentTime+(at||0),o=c.createOscillator(),g=c.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(to)o.frequency.exponentialRampToValueAtTime(to,t+d);g.gain.setValueAtTime(v||.12,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+d+.03)}catch(e){}}
-function noise(d,v,fq,at){const c=ac();if(!c)return;try{const n=Math.floor(c.sampleRate*d),b=c.createBuffer(1,n,c.sampleRate),a=b.getChannelData(0);for(let i=0;i<n;i++)a[i]=Math.random()*2-1;
- const t=c.currentTime+(at||0),src=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();src.buffer=b;f.type='bandpass';f.frequency.value=fq||1500;g.gain.setValueAtTime(v||.2,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);src.connect(f);f.connect(g);g.connect(c.destination);src.start(t)}catch(e){}}
+/* 효과음: 파일 없이 합성 (컴프레서 + 에코) */
+let AC=null,MB=null;
+function ac(){try{if(!S||!S.sfx)return null;
+ if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();
+  const comp=AC.createDynamicsCompressor();comp.threshold.value=-16;comp.ratio.value=5;comp.connect(AC.destination);
+  const dl=AC.createDelay(.6);dl.delayTime.value=.16;const fb=AC.createGain();fb.gain.value=.3;const wet=AC.createGain();wet.gain.value=.3;
+  dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(comp);MB={dry:comp,echo:dl}}
+ if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
+function tone(f,d,type,v,to,at,o){const c=ac();if(!c)return;o=o||{};
+ try{const t=c.currentTime+(at||0),osc=c.createOscillator(),g=c.createGain();osc.type=type||'sine';osc.frequency.setValueAtTime(f,t);if(to)osc.frequency.exponentialRampToValueAtTime(to,t+d);
+  let out=g;if(o.lp){const lf=c.createBiquadFilter();lf.type='lowpass';lf.frequency.setValueAtTime(o.lp,t);if(o.lp2)lf.frequency.exponentialRampToValueAtTime(o.lp2,t+d);g.connect(lf);out=lf}
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v||.1,t+(o.a||.004));g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  osc.connect(g);out.connect(MB.dry);if(o.echo)out.connect(MB.echo);
+  if(o.vib){const l=c.createOscillator(),lg=c.createGain();l.frequency.value=o.vib[0];lg.gain.value=o.vib[1];l.connect(lg);lg.connect(osc.frequency);l.start(t);l.stop(t+d+.05)}
+  osc.start(t);osc.stop(t+d+.05)}catch(e){}}
+function noise(d,v,f0,f1,at,type,q,o){const c=ac();if(!c)return;o=o||{};
+ try{const n=Math.floor(c.sampleRate*d),b=c.createBuffer(1,n,c.sampleRate),a=b.getChannelData(0);for(let i=0;i<n;i++)a[i]=Math.random()*2-1;
+  const t=c.currentTime+(at||0),src=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();src.buffer=b;f.type=type||'bandpass';f.Q.value=q||1;f.frequency.setValueAtTime(f0,t);if(f1)f.frequency.exponentialRampToValueAtTime(f1,t+d);
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+(o.a||.004));g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  src.connect(f);f.connect(g);g.connect(MB.dry);if(o.echo)g.connect(MB.echo);src.start(t)}catch(e){}}
+const rr=(a,b)=>a+Math.random()*(b-a);
 const SFX={
- tap:()=>tone(720,.05,'square',.035),
- cast:()=>tone(300,.14,'triangle',.07,700),
- hit:()=>{noise(.12,.28,1700);tone(170,.12,'sawtooth',.1,60)},
- crit:()=>{noise(.2,.38,2400);tone(240,.2,'sawtooth',.14,50);tone(900,.1,'square',.05,300,.02)},
- boom:()=>{noise(.55,.4,320);tone(95,.5,'sawtooth',.18,30)},
- zap:()=>{tone(1400,.25,'square',.06,180);noise(.25,.2,5200)},
- miss:()=>noise(.2,.09,3600),
- heal:()=>{tone(523,.16,'sine',.1);tone(659,.16,'sine',.1,0,.1);tone(784,.3,'sine',.1,0,.2)},
- up:()=>{tone(440,.14,'triangle',.09,660);tone(660,.2,'triangle',.09,990,.1)},
- down:()=>{tone(520,.16,'triangle',.09,260);tone(300,.22,'triangle',.09,150,.1)},
- stun:()=>{tone(380,.12,'square',.05);tone(300,.12,'square',.05,0,.12);tone(220,.2,'square',.05,0,.24)},
- ko:()=>tone(260,.5,'sawtooth',.09,40),
- win:()=>{[523,659,784,1047].forEach((f,i)=>tone(f,.22,'triangle',.09,0,i*.1))},
- lose:()=>{[392,330,262,196].forEach((f,i)=>tone(f,.3,'triangle',.09,0,i*.18))},
- pull:()=>{tone(500,.4,'sine',.08,900);noise(.4,.06,4000)},
- rare:()=>{[784,988,1175,1568].forEach((f,i)=>tone(f,.4,'triangle',.09,0,i*.12));noise(.6,.06,5000,.1)}};
+ tap:()=>{tone(1300,.05,'triangle',.05,800)},
+ cast:()=>{noise(.34,.07,500,3200,0,'bandpass',2);tone(260,.32,'sine',.08,820,0,{echo:1})},
+ slash:()=>{noise(.13,.13,2200,7500,0,'bandpass',1.6);noise(.12,.34,2600,420,.06,'lowpass',.7);tone(200,.16,'sine',.22,55,.06)},
+ hit:()=>{noise(.1,.34,2400,420,0,'lowpass',.7);tone(190,.15,'sine',.24,55)},
+ crit:()=>{noise(.13,.14,2200,8000,0,'bandpass',1.6);noise(.2,.4,3000,300,.05,'lowpass',.7);tone(130,.28,'sine',.3,38,.05);tone(1568,.55,'sine',.05,0,.06,{echo:1});tone(2217,.4,'sine',.035,0,.06)},
+ boom:()=>{tone(115,.75,'sine',.38,26);noise(.85,.36,1500,80,0,'lowpass',.8);noise(.4,.2,3200,700,.03,'bandpass',.9);for(let i=0;i<5;i++)noise(.04,.1,rr(2500,5000),0,.12+i*.07,'bandpass',2)},
+ zap:()=>{tone(1900,.22,'sawtooth',.07,110,0,{lp:5200});tone(70,.4,'sawtooth',.12,48,.02,{lp:420});noise(.3,.2,6500,2600,0,'highpass',.8);for(let i=0;i<6;i++)tone(rr(300,2100),.028,'square',.06,0,i*.035)},
+ miss:()=>noise(.3,.11,3300,700,0,'bandpass',1.2),
+ heal:()=>{[523,659,784,1047].forEach((f,i)=>tone(f,.55,'sine',.075,0,i*.09,{echo:1}));tone(2093,.45,'sine',.022,0,.32)},
+ up:()=>{tone(392,.36,'triangle',.07,784,0,{echo:1,lp:3200});tone(587,.36,'triangle',.055,1175,.06,{echo:1});[1568,2093].forEach((f,i)=>tone(f,.22,'sine',.035,0,.2+i*.07))},
+ down:()=>{tone(440,.55,'sawtooth',.07,100,0,{lp:1800,lp2:180});tone(220,.6,'sine',.12,55,.05);noise(.5,.08,900,140,0,'lowpass')},
+ stun:()=>{tone(250,.16,'sine',.32,65);noise(.05,.2,2200,500,0,'lowpass');[[880,.12],[1175,.26],[784,.4]].forEach(([f,t])=>tone(f,.5,'sine',.07,0,t,{echo:1,vib:[7,f*.02]}))},
+ ko:()=>{tone(320,.65,'sawtooth',.1,38,0,{lp:1400,lp2:90});noise(.55,.16,1100,90,0,'lowpass')},
+ win:()=>{[523,659,784,1047].forEach((f,i)=>{tone(f,.45,'triangle',.08,0,i*.1,{echo:1});tone(f*2,.4,'sine',.025,0,i*.1)})},
+ lose:()=>{[392,330,262,196].forEach((f,i)=>tone(f,.5,'triangle',.08,0,i*.2,{lp:1800,lp2:300,echo:1}))},
+ pull:()=>{noise(.5,.1,500,5500,0,'bandpass',2);tone(420,.5,'sine',.07,1000,0,{echo:1})},
+ rare:()=>{noise(.5,.1,500,6000,0,'bandpass',2);[784,988,1175,1568,1976].forEach((f,i)=>tone(f,.7,'triangle',.07,0,.15+i*.1,{echo:1}));tone(3136,.8,'sine',.03,0,.5,{echo:1})}};
 function sfx(k){try{if(SFX[k])SFX[k]()}catch(e){}}
 const hpColor=r=>r>.5?'#8fd49b':r>.2?'#e8c870':'#e0705a';
 
@@ -92,24 +108,35 @@ const svg=k=>`<svg class="si" viewBox="0 0 24 24" fill="none" stroke="currentCol
 const skKind=s=>s.t==='a'?(s.sc==='범위'?'area':'single'):s.t==='h'?'heal':s.t==='b'?'buff':s.t==='g'?'guard':s.t==='w'?'debuff':'evade';
 const picOver=src=>`<img src="${src}" alt="" onload="this.previousSibling.style.display='none'" onerror="this.remove()">`;
 const skIcon=(ch,i,s)=>`<span class="sic">${svg(skKind(s))}${i>=0?picOver(`img/skill/${ch.id}_${i+1}.png`):''}</span>`;
-const BOOKSZ={s:.8,m:1,l:1.2};
-const bookIcon=k=>`<span class="sic bk" style="--z:${BOOKSZ[k[1]]};${k[0]==='s'?'color:var(--阳)':''}">${svg(k[0]==='l'?'trn':'gi')}${picOver('img/item/'+k+'.png')}</span>`;
+const BOOKSZ={s:.85,m:1,l:1.15};
+const BKB='<rect x="9" y="4" width="14" height="24" rx="1" fill="#e2d8bd" stroke="#1a1814" stroke-width="1"/><path d="M12.2 4v24" stroke="#8c3b31" stroke-width=".7"/><path d="M9 8h3.2M9 12.5h3.2M9 17h3.2M9 21.5h3.2M9 26h3.2" stroke="#8c3b31" stroke-width=".9"/><rect x="15" y="7" width="5" height="11" fill="none" stroke="#1a1814" stroke-width=".8"/><path d="M16.7 10h1.6M16.7 12.8h1.6M16.7 15.6h1.6" stroke="#1a1814" stroke-width=".7"/>';
+const ELK=['木','火','土','金','水'];
+function bkSvg(k){const n={s:1,m:2,l:3}[k[1]]||1;let g='';
+ if(k[0]==='l'){const T=n===1?[[0,0,0,1]]:n===2?[[-4,1,-9,.95],[3.5,0,5,.95]]:[[-6,2,-15,.88],[6,1,11,.88],[0,-1,0,.92]];
+  g=T.map(t=>`<g transform="translate(${t[0]} ${t[1]}) rotate(${t[2]} 16 16) translate(16 16) scale(${t[3]}) translate(-16 -16)">${BKB}</g>`).join('')}
+ else{const P=ELK.map((e,i)=>{const a=(-90+72*i)*Math.PI/180;return[16+10.5*Math.cos(a),16+10.5*Math.sin(a),e]});
+  const ln=(a,b)=>`M${P[a][0].toFixed(1)} ${P[a][1].toFixed(1)}L${P[b][0].toFixed(1)} ${P[b][1].toFixed(1)}`;
+  g=`<path d="${[0,1,2,3,4].map(i=>ln(i,(i+1)%5)).join('')}" stroke="#f2f2f0" stroke-opacity=".5" stroke-width=".7" fill="none"/>`;
+  if(n>=2)g+=`<path d="${[0,1,2,3,4].map(i=>ln(i,(i+2)%5)).join('')}" stroke="#f2f2f0" stroke-opacity=".28" stroke-width=".6" fill="none"/>`;
+  if(n>=3)g+=`<circle cx="16" cy="16" r="14.6" fill="none" stroke="#f0e2ae" stroke-opacity=".6" stroke-width=".8"/><circle cx="16" cy="16" r="2" fill="#f0e2ae"/>`;
+  g+=P.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.3" style="fill:var(--${p[2]})" stroke="#0c0d11" stroke-width=".8"/><circle cx="${(p[0]-1).toFixed(1)}" cy="${(p[1]-1).toFixed(1)}" r=".9" fill="#fff" fill-opacity=".65"/>`).join('')}
+ return `<svg class="si" viewBox="0 0 32 32">${g}</svg>`}
+const bookIcon=k=>`<span class="sic bk" style="--z:${BOOKSZ[k[1]]}">${bkSvg(k)}${picOver('img/item/'+k+'.png')}</span>`;
 const stHtml=s=>(s.stun?`<span title="">${svg('stun')}</span>`:'')+(s.shock?`<span>${svg('shock')}</span>`:'')+(s.ev?`<span>${svg('evade')}</span>`:'');
 
 const kindName=s=>s.t==='a'?(s.sc==='범위'?'범위 공격':'단일 공격'):s.t==='w'?'적 변화':'자기 변화';
 const statLine=(s,lv)=>{const p=Math.round((s.p||0)*skMul(lv)),acc=s.t==='a'?(s.acc!==undefined?s.acc:95):100;return `위력 ${s.t==='a'?p:'-'} / 명중 ${acc}`};
-function skFace(ch,i,s,lv,tag){const c=mpCost(s,i);
- return `<div class="sf"><span class="a">${i<0?svg('single'):skIcon(ch,i,s)}${c?`<small>MP ${c}</small>`:''}</span><span class="b">${kindName(s)}</span><span class="c">${s.n}${tag||''}</span><span class="d">${statLine(s,lv)}</span></div>`}
+function skFace(ch,i,s,lv,tag,mp){const c=mp?mpCost(s,i):0;
+ return `<div class="sf"><span class="a">${i<0?svg('single'):skIcon(ch,i,s)}</span><span class="c">${s.n}${tag||''}${mp?`<small>MP ${c}</small>`:''}</span><span class="r"><span>${kindName(s)}</span><span>${statLine(s,lv)}</span></span></div>`}
 
 /* =====================================================================
    전투 로직
    ===================================================================== */
 let run=null,busy=false,skipFn=null,lastHp={};
 function newFighter(ch,lv,bt,side,mult,sl){const s=calcStats(ch,lv,bt);mult=mult||{};const k=mult.all||1,b=btFx(bt);
- const f={ch,lv,side,sl:sl||[],maxhp:Math.round(s.hp*(mult.hp||1)*k),atk:s.atk*(mult.atk||1)*k,def:s.def*(mult.def||1)*k,spd:s.spd,hp:0,pow:b.pow,mpStart:b.mp,mpRegen:b.reg,mpm:MP_MAX};
+ const f={ch,lv,side,sl:sl||[],maxhp:Math.round(s.hp*(mult.hp||1)*k),atk:s.atk*(mult.atk||1)*k,def:s.def*(mult.def||1)*k,spd:s.spd,hp:0,pow:b.pow,mpm:b.max,gain:b.gain,mp:b.max};
  f.hp=f.maxhp;resetBattleState(f);return f}
-function resetBattleState(f){f.m={atk:0,def:0};f.mT=0;f.d={atk:0,def:0};f.dT=0;f.evade=0;f.stun=0;f.stunImm=0;f.rest=0;f.shock=false;f.shockT=0;f.dot=null;
- f.mp=f.mpStart}
+function resetBattleState(f){f.m={atk:0,def:0};f.mT=0;f.d={atk:0,def:0};f.dT=0;f.evade=0;f.stun=0;f.stunImm=0;f.rest=0;f.shock=false;f.shockT=0;f.dot=null}
 function st(f,k){let v=f[k];if(f.side==='p'&&run)v*=1+run.buf[k];
  if(k==='atk'||k==='def')v*=Math.max(.4,1+f.m[k]-f.d[k]);return v}
 const slv=(f,i)=>(i>=0&&f.sl[i]&&f.sl[i].lv)||1;
@@ -154,8 +181,8 @@ function perform(a,d,idx,ev){
  if(a.stun>0){
   if(Math.random()<CFG.STUN_WAKE){a.stun=0;a.stunImm=1;say(`${josa(a.ch.name,'은/는')} 정신을 차렸다.`,{pop:tx(me,'기상'),sfx:'up'})}
   else{say(`${josa(a.ch.name,'은/는')} 움직이지 못한다.`,{pop:tx(me,'기절'),fx:{side:me,k:'stun'},sfx:'stun'});return}}
- a.mp=Math.max(0,a.mp-mpCost(sk,idx));
- say(`${a.ch.name}의 ${sk.n}`,{act:{side:me,n:sk.n,k:skKind(sk)},sfx:'cast',lunge:sk.t==='a'?me:null,d:520});
+ const cost=mpCost(sk,idx);a.mp=Math.max(0,a.mp-cost);if(cost===0)a.mp=Math.min(a.mpm,a.mp+a.gain);
+ say(`${a.ch.name}의 ${sk.n}`,{act:{side:me,n:sk.n,k:skKind(sk)},fx:{side:me,k:'charge',c:EC[a.ch.el]},sfx:'cast',lunge:sk.t==='a'?me:null,d:520});
  if(sk.t==='a'){
   const acc=(sk.acc!==undefined?sk.acc:95)-(a.shock?50:0);
   if(d.evade>0){say(`${josa(d.ch.name,'은/는')} 공격을 피했다.`,{pop:tx(you,'회피'),fx:{side:you,k:'dodge'},sfx:'miss'});return}
@@ -163,12 +190,12 @@ function perform(a,d,idx,ev){
   const h=hitCalc(a,d,sk,k);
   d.hp=Math.max(0,d.hp-h.dmg);
   const area=sk.sc==='범위';
-  say(`${d.ch.name}에게 ${h.dmg} 피해`+(h.crit?' · 치명타':''),{pop:{side:you,v:'-'+h.dmg,cls:h.crit?'crit':''},fx:{side:you,k:sk.shock?'zap':area?'ring':'slash',c:EC[a.ch.el]},sfx:h.crit?'crit':area?'boom':sk.shock?'zap':'hit',shake:h.crit||area||h.dmg>=d.maxhp*.25});
+  say(`${d.ch.name}에게 ${h.dmg} 피해`+(h.crit?' · 치명타':''),{pop:{side:you,v:'-'+h.dmg,cls:h.crit?'crit':''},fx:{side:you,k:sk.shock?'zap':area?'ring':'slash',c:EC[a.ch.el],big:h.crit},sfx:h.crit?'crit':area?'boom':sk.shock?'zap':'slash',shake:h.crit||area||h.dmg>=d.maxhp*.25});
   if(sk.drain&&a.hp>0){const g=Math.round(h.dmg*.5);a.hp=Math.min(a.maxhp,a.hp+g);say(`${a.ch.name} HP ${g} 흡수`,{pop:{side:me,v:'+'+g,cls:'heal'},fx:{side:me,k:'heal'},sfx:'heal'})}
   if(sk.recoil&&a.hp>0){const r=Math.round(h.dmg*sk.recoil/100);a.hp=Math.max(0,a.hp-r);say(`${a.ch.name} 반동 ${r}`,{pop:{side:me,v:'-'+r,cls:'dot'},sfx:'hit'})}
   if(d.hp>0&&sk.stun&&d.stun<=0&&(sk.stun>=100||!d.stunImm)&&Math.random()*100<sk.stun){d.stun=1;say(`${josa(d.ch.name,'은/는')} 기절했다.`,{pop:tx(you,'기절'),fx:{side:you,k:'stun'},sfx:'stun'})}
   if(d.hp>0&&sk.shock&&!d.shock){d.shock=true;d.shockT=0;say(`${josa(d.ch.name,'은/는')} 감전되었다.`,{pop:tx(you,'감전'),sfx:'zap'})}
-  if(d.hp>0&&sk.dot){d.dot={pct:sk.dot,t:3};say(`${josa(d.ch.name,'은/는')} 지속 피해를 입는다.`,{pop:tx(you,'지속'),sfx:'down'})}
+  if(d.hp>0&&sk.dot){d.dot={pct:sk.dot,t:3};say(`${josa(d.ch.name,'은/는')} 지속 피해를 입는다.`,{pop:tx(you,'지속'),fx:{side:you,k:'down',c:'#8a6fb8'},sfx:'down'})}
   if(sk.selfStun&&a.hp>0)a.rest=1;
  }else if(sk.t==='h'){
   const g=Math.round(a.maxhp*sk.p*k/100),before=a.hp;a.hp=Math.min(a.maxhp,a.hp+g);
@@ -203,7 +230,6 @@ function endOfTurn(ev){
   if(f.evade>0)f.evade--;
   if(f.stunImm>0)f.stunImm--;
   if(f.hp>0&&f.shock){if(f.shockT>=1&&Math.random()<CFG.SHOCK_FREE){f.shock=false;say(`${josa(f.ch.name,'은/는')} 감전에서 풀렸다.`,{pop:{side:f.side,v:'해제',cls:'tx'},sfx:'up'})}f.shockT++}
-  if(f.hp>0)f.mp=Math.min(f.mpm,f.mp+f.mpRegen);
  })}
 
 function doTurn(action){
@@ -250,7 +276,7 @@ function winBattle(){
  const coin=12+3*w+(boss?80+2*w:0);
  S.coin+=coin;run.gained+=coin;run.won=w;
  const xp=12+3*w;
- run.party.forEach(f=>{if(f.hp>0)addExp(f.ch.id,xp)});
+ run.party.forEach(f=>{if(f.hp>0){addExp(f.ch.id,xp);f.mp=Math.min(f.mpm,f.mp+MP_WIN)}});
  if(S.best<w)S.best=w;
  save();
  run.note=`${TG} ${coin}`;
@@ -265,6 +291,7 @@ function rewardCards(){
   {k:'hp',t:'체력',d:'최대 HP +10%'},
   {k:'exp',t:'수련',d:`경험치 +${20+w*6}`},
   {k:'purse',t:'재물',d:`${TG} ${60+w*4}`}];
+ if(run.party.some(f=>f.hp>0&&f.mp<f.mpm*.6))pool.push({k:'mp',t:'MP',d:`+${MP_CARD}`},{k:'mp',t:'MP',d:`+${MP_CARD}`},{k:'mp',t:'MP',d:`+${MP_CARD}`});else pool.push({k:'mp',t:'MP',d:`+${MP_CARD}`});
  if(dmg)pool.push({k:'heal',t:'회복',d:'HP 40%'},{k:'heal',t:'회복',d:'HP 40%'});
  if(down)pool.push({k:'revive',t:'부활',d:'HP 50%'},{k:'revive',t:'부활',d:'HP 50%'});
  const out=[];while(out.length<3&&pool.length){const i=Math.floor(Math.random()*pool.length);const c=pool.splice(i,1)[0];if(!out.some(o=>o.k===c.k))out.push(c)}
@@ -275,6 +302,7 @@ function pickReward(i){
  if(c.k==='atk'||c.k==='def'||c.k==='spd')run.buf[c.k]+=.08;
  else if(c.k==='hp')run.party.forEach(f=>{const n=Math.round(f.maxhp*1.1);if(f.hp>0)f.hp+=n-f.maxhp;f.maxhp=n});
  else if(c.k==='heal')run.party.forEach(f=>{if(f.hp>0)f.hp=Math.min(f.maxhp,f.hp+Math.round(f.maxhp*.4))});
+ else if(c.k==='mp')run.party.forEach(f=>{if(f.hp>0)f.mp=Math.min(f.mpm,f.mp+MP_CARD)});
  else if(c.k==='revive'){const f=run.party.find(x=>x.hp<=0);if(f)f.hp=Math.round(f.maxhp*.5)}
  else if(c.k==='exp')run.party.forEach(f=>{if(f.hp>0)addExp(f.ch.id,20+run.wave*6)});
  else if(c.k==='purse'){const v=60+run.wave*4;S.coin+=v;run.gained+=v}
@@ -297,7 +325,7 @@ function resolveStar(star){
  const ch=rnd(CH.filter(c=>c.star===star));
  if(!S.chars[ch.id]){S.chars[ch.id]=newChar();ensureChar(ch.id);return{kind:'char',ch,tag:'NEW'}}
  const o=S.chars[ch.id];
- if(o.bt<CFG.BT_MAX){o.bt++;return{kind:'char',ch,tag:`돌파 ${o.bt}`}}
+ if(o.bt<CFG.BT_MAX){o.bt++;return{kind:'char',ch,tag:`BREAKTHROUGH ${o.bt}`,bt:true}}
  const v=CFG.AP_DUP[ch.star]||1;S.ap+=v;return{kind:'char',ch,tag:`살구 ${v}`}}
 function pullMany(n){
  const sts=[];for(let i=0;i<n;i++)sts.push(rollStar());
@@ -324,7 +352,7 @@ function pull(n){
  S.coin-=cost;const res=pullMany(n);save();
  const cells=res.map(r=>r.kind==='mat'
   ?`<div class="rc"><div class="tile" style="--c:#c4c9d4">${bookIcon(r.k)}</div>${BOOK[r.k].n}</div>`
-  :`<div class="rc r${r.ch.star}"><div class="tile" style="--c:${EC[r.ch.el]}"><b>${r.ch.name[0]}</b>${imgTag(r.ch)}</div>${r.ch.name}<small>${r.tag}</small></div>`).join('');
+  :`<div class="rc r${r.ch.star}"><div class="tile" style="--c:${EC[r.ch.el]}"><b>${r.ch.name[0]}</b>${imgTag(r.ch)}</div>${r.ch.name}<small${r.bt?' class="btg"':''}>${r.tag}</small></div>`).join('');
  toGacha();sfx(res.some(r=>r.kind==='char'&&r.ch.star>=5)?'rare':'pull');
  $('ovl').innerHTML=`<div class="ov" onclick="toGacha()"><div class="res" style="${n===1?'grid-template-columns:4.2em':''}">${cells}</div></div>`}
 function flashWallet(){const w=document.querySelector('.wallet');if(!w)return;w.style.color='var(--acc)';setTimeout(()=>{w.style.color=''},500)}
@@ -373,18 +401,21 @@ function skRows(c,o,train){
   const bt=(train&&o)?`<div class="bt">${['ss','sm','sl'].map(b=>`<button class="mini" ${S.mats[b]>0&&sl.lv<CFG.SK_MAX?'':'disabled'} onclick="useSk('${c.id}',${i},'${b}')">${bookIcon(b)}</button>`).join('')}</div>`:'';
   return `<div class="sk">${skFace(c,i,k,sl.lv,o?`<i>${sl.lv>=CFG.SK_MAX?'MAX':'Lv.'+sl.lv}</i>`:'')}${bt}</div>`}).join('')}
 function profHtml(c){const p=PROF[c.id]||{};
- const rows=[['소속',p.aff],['성별',p.sex],['나이',p.age],['신체',p.ht],['종족',p.race||c.race],['주 오행',p.el||c.el],['능력',p.abil]].filter(r=>r[1]);
+ const v=(k,d)=>p[k]||d;
+ const cell=(a,b,w)=>b?`<div${w?' class="w"':''}><span>${a}</span><b>${b}</b></div>`:'';
+ const grid=cell('소속',v('aff'))+cell('성별',v('sex'))+cell('나이',v('age'))+cell('신체',v('ht'))+cell('종족',v('race',c.race))+cell('주 오행',v('el',c.el))+cell('능력',v('abil'),1);
  const intro=p.intro||LORE[c.id];
- return `${p.rom?`<div class="sub">${p.rom}</div>`:''}<div class="pg">${rows.map(r=>`<span>${r[0]}</span><b>${r[1]}</b>`).join('')}</div>${intro?`<div class="intro">${intro}</div>`:''}`}
+ const paras=intro?intro.split(/(?<=[.!?])\s+/).filter(Boolean).map(t=>`<p>${t}</p>`).join(''):'';
+ return `${p.rom?`<div class="sub">${p.rom}</div>`:''}<div class="pg">${grid}</div>${paras?`<div class="intro">${paras}</div>`:''}`}
 function btHtml(c,o){const n=o?o.bt:0,b=btFx(n);
- const sum=`<div class="btsum"><span>능력치<b>+${n*8}%</b></span><span>스킬 위력<b>+${Math.round((b.pow-1)*100)}%</b></span><span>시작 MP<b>${b.mp}</b></span><span>MP 회복<b>+${b.reg}</b></span></div>`;
+ const sum=`<div class="btsum"><span>능력치<b>+${n*8}%</b></span><span>스킬 위력<b>+${Math.round((b.pow-1)*100)}%</b></span><span>최대 MP<b>${b.max}</b></span><span>기본 공격 MP<b>+${b.gain}</b></span></div>`;
  const rows=BT_X.map((x,i)=>`<div class="bs ${i<n?'on':''}"><i>${i+1}</i><span>능력치 +8%${x?' · '+x:''}</span></div>`).join('');
- const how=o?`<div class="sub" style="margin-top:.7em">${n>=CFG.BT_MAX?`${AP} ${CFG.AP_DUP[c.star]||1}`:'중복 획득 시 돌파'}</div>`:'';
+ const how=(o&&n>=CFG.BT_MAX)?`<div class="sub" style="margin-top:.7em">${AP} ${CFG.AP_DUP[c.star]||1}</div>`:'';
  return sum+rows+how}
 function detHtml(id,train){
  const c=CHM[id],o=S.chars[id];
  const head=`<div class="dh">${train?'':tileHtml(c)}<div><div class="nm">${c.name}</div><div class="sub">${rank(c.star)}${o?`Lv.${o.lv} / ${CFG.LV_MAX}`:''}</div></div></div>`;
- const tabs=train?`<div class="row">${[['info','INFO'],['bt','돌파'],['lore','PROFILE']].map(t=>`<button class="mini ${arcTab===t[0]?'on':''}" onclick="arcT('${t[0]}')">${t[1]}</button>`).join('')}</div>`:'';
+ const tabs=train?`<div class="tabs">${[['info','INFO'],['bt','BREAKTHROUGH'],['lore','PROFILE']].map(t=>`<button class="mini ${arcTab===t[0]?'on':''}" onclick="arcT('${t[0]}')">${t[1]}</button>`).join('')}</div>`:'';
  if(train&&arcTab==='lore')return head+tabs+profHtml(c);
  if(train&&arcTab==='bt')return head+tabs+btHtml(c,o);
  if(!o){
@@ -443,18 +474,109 @@ function buyChar(id){const c=CHM[id],p=CFG.AP_CHAR[c.star];if(!p||S.chars[id]||S
    ===================================================================== */
 function drawBattle(){
  const m=mapOf(run.wave),E=run.enemy;
- const card=(sd,inner)=>`<div class="cb" id="${sd}C"><div class="act" id="${sd}Act"></div><div class="pop" id="${sd}Pop"></div>${inner}<div class="fxl" id="${sd}Fx"></div>
+ const card=(sd,inner)=>`<div class="cb" id="${sd}C"><div class="act" id="${sd}Act"></div><div class="pop" id="${sd}Pop"></div>${inner}
   <div class="who"><span id="${sd}Nm"></span><span id="${sd}Lv"></span></div><div class="hpl"><i id="${sd}Bar"></i></div><div class="mpl"><i id="${sd}Mp"></i></div><div class="hn" id="${sd}Hn"></div><div class="stt" id="${sd}St"></div></div>`;
  show(`<div class="bg" id="bgm" style="background-image:linear-gradient(170deg,${m.g[0]},${m.g[1]})"></div><div class="veil"></div>
  <div class="where">${m.name} · ${run.wave}</div>
  ${card('e',`<div class="pf" id="ePF" style="--c:${EC[E.ch.el]}"><b>${E.ch.name[0]}</b>${IMG('battle',E.ch)}</div>`)}
  ${card('p',`<div class="pf" id="pPF"></div>`)}
- <div id="cards"></div><div id="sideL" class="side l"></div><div id="sideR" class="side r"></div><div id="ovl"></div>`);
- const s=snap();lastHp={e:s.e.hp,p:s.p.hp,id:s.p.id};
+ <div id="cards"></div><div id="sideL" class="side l"></div><div id="sideR" class="side r"></div><canvas id="fxc"></canvas><div id="ovl"></div>`);
+ FX.clear();const s=snap();lastHp={e:s.e.hp,p:s.p.hp,id:s.p.id};
  $('eNm').textContent=E.ch.name;$('eLv').textContent='Lv.'+E.lv;
  $('pPF').dataset.id='';
  paintInfo(s,false);paintMenu();
  const img=new Image();img.onload=()=>{const b=$('bgm');if(b)b.style.backgroundImage=`url(maps/${m.id}.png)`};img.src=`maps/${m.id}.png`}
+
+/* 이펙트: canvas 파티클 */
+const FX=(()=>{
+ let cv=null,c=null,W=0,H=0,dp=1,L=[],raf=0,lt=0;const cc={};
+ const R=(a,b)=>a+Math.random()*(b-a),TAU=Math.PI*2;
+ function rgb(col){if(cc[col])return cc[col];let s=col||'#f2f2f0';const m=/var\((--[^)]+)\)/.exec(s);
+  if(m)s=getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim()||'#f2f2f0';
+  let h=s.replace('#','');if(h.length===3)h=h.split('').map(x=>x+x).join('');
+  const v=[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];return cc[col]=v.some(isNaN)?[242,242,240]:v}
+ const A=(col,a)=>{const v=rgb(col);return `rgba(${v[0]},${v[1]},${v[2]},${Math.max(0,Math.min(1,a))})`};
+ function init(){cv=$('fxc');if(!cv)return false;const g=$('game').getBoundingClientRect();dp=Math.min(2,window.devicePixelRatio||1);W=g.width;H=g.height;
+  const w=Math.round(W*dp),h=Math.round(H*dp);if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}c=cv.getContext('2d');return true}
+ function box(side){const el=$(side+'C'),g=$('game').getBoundingClientRect();if(!el)return null;const r=el.getBoundingClientRect(),w=r.width,h=w*4/3;
+  return{x:r.left-g.left+w/2,y:r.top-g.top+h/2,w,h}}
+ function loop(ts){raf=0;if(!cv||!cv.isConnected){L=[];return}
+  const dt=Math.min(.05,(ts-lt)/1000||.016);lt=ts;c.setTransform(dp,0,0,dp,0,0);c.clearRect(0,0,W,H);
+  L=L.filter(o=>{o.age+=dt;if(o.age<0)return true;const p=o.age/o.dur;if(p>=1)return false;c.save();o.fn(p,o.age,dt);c.restore();return true});
+  if(L.length)raf=requestAnimationFrame(loop);else c.clearRect(0,0,W,H)}
+ function add(fn,dur,delay){L.push({fn,dur,age:-(delay||0)});if(!raf){lt=performance.now();raf=requestAnimationFrame(loop)}}
+ function glow(x,y,r,col,a){const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,A(col,a));g.addColorStop(1,A(col,0));c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,TAU);c.fill()}
+ function star(x,y,r,rot){c.beginPath();for(let i=0;i<8;i++){const a=rot+i*Math.PI/4,rr=i%2?r*.28:r;c.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr)}c.closePath()}
+ /* 불꽃 */
+ function sparks(x,y,n,col,o){o=o||{};const P=[];for(let i=0;i<n;i++){const a=o.a!==undefined?o.a+R(-(o.s||.7),(o.s||.7)):R(0,TAU),v=R(o.v0||140,o.v1||420);P.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:R(.5,1)*(o.life||.45),w:R(1,2.6)*(o.sz||1)})}
+  add((p,age,dt)=>{c.globalCompositeOperation='lighter';c.lineCap='round';
+   P.forEach(q=>{q.vx*=.93;q.vy=q.vy*.93+(o.g===undefined?260:o.g)*dt;q.x+=q.vx*dt;q.y+=q.vy*dt;const lf=1-age/q.l;if(lf<=0)return;
+    c.strokeStyle=A(o.white?'#fff':col,lf);c.lineWidth=q.w;c.beginPath();c.moveTo(q.x,q.y);c.lineTo(q.x-q.vx*.045,q.y-q.vy*.045);c.stroke()})},o.life||.5,o.delay)}
+ /* 칼날 궤적 */
+ function blade(x0,y0,x1,y1,curve,th,col,delay){const dx=x1-x0,dy=y1-y0,len=Math.hypot(dx,dy),nx=-dy/len,ny=dx/len;
+  add(p=>{const hp=Math.min(1,p/.45),tp=Math.max(0,(p-.2)/.8),N=20,fade=1-Math.max(0,p-.55)/.45;if(hp<=tp)return;
+   const pts=[];for(let i=0;i<=N;i++){const t=tp+(hp-tp)*i/N,off=Math.sin(t*Math.PI)*curve;pts.push([x0+dx*t+nx*off,y0+dy*t+ny*off,Math.sin(i/N*Math.PI)])}
+   c.globalCompositeOperation='lighter';
+   [[1.7,col,.6],[.55,'#fff',1]].forEach(([k,cl,al])=>{c.fillStyle=A(cl,al*fade);c.shadowColor=A(col,1);c.shadowBlur=k>1?14:6;c.beginPath();
+    pts.forEach((q,i)=>{const m=q[2]*th*k/2;c[i?'lineTo':'moveTo'](q[0]+nx*m,q[1]+ny*m)});
+    for(let i=N;i>=0;i--){const q=pts[i],m=q[2]*th*k/2;c.lineTo(q[0]-nx*m,q[1]-ny*m)}c.closePath();c.fill()})},.34,delay)}
+ const FXS={
+  slash(b,col,big){const t=b.w*.17*big;
+   blade(b.x+b.w*.55,b.y-b.h*.42,b.x-b.w*.5,b.y+b.h*.4,b.w*.18,t,col,0);
+   blade(b.x-b.w*.5,b.y-b.h*.18,b.x+b.w*.52,b.y+b.h*.3,-b.w*.14,t*.7,col,.1);
+   add(p=>{c.globalCompositeOperation='lighter';glow(b.x,b.y,b.w*.8*big,col,.55*(1-p))},.25,.12);
+   sparks(b.x,b.y,14*big,col,{a:Math.PI*.75,s:1,delay:.12,life:.4});sparks(b.x,b.y,8,col,{white:1,delay:.14,life:.3,v0:200,v1:480})},
+  ring(b,col){
+   add(p=>{c.globalCompositeOperation='lighter';glow(b.x,b.y,b.w*1.3,'#fff',.8*(1-p)*(1-p));glow(b.x,b.y,b.w*1.3,col,.5*(1-p))},.32);
+   add(p=>{const r=b.w*(.1+.95*Math.pow(p,.55));c.globalCompositeOperation='lighter';c.strokeStyle=A(col,1-p);c.lineWidth=b.w*.14*(1-p)+1;c.shadowColor=A(col,1);c.shadowBlur=16;c.beginPath();c.arc(b.x,b.y,r,0,TAU);c.stroke()},.55);
+   add(p=>{const r=b.w*(.05+.7*Math.pow(p,.6));c.globalCompositeOperation='lighter';c.strokeStyle=A('#fff',(1-p)*.9);c.lineWidth=b.w*.04*(1-p)+.8;c.beginPath();c.arc(b.x,b.y,r,0,TAU);c.stroke()},.45,.05);
+   for(let i=0;i<9;i++){const a=R(0,TAU),d=R(.2,.6)*b.w,sx=b.x+Math.cos(a)*d,sy=b.y+Math.sin(a)*d,sz=R(.18,.34)*b.w;
+    add(p=>{c.fillStyle=`rgba(18,18,24,${.3*(1-p)})`;c.beginPath();c.arc(sx+Math.cos(a)*p*b.w*.5,sy+Math.sin(a)*p*b.w*.5-p*b.w*.2,sz*(.5+p),0,TAU);c.fill()},.7,R(0,.08))}
+   sparks(b.x,b.y,30,col,{v0:200,v1:620,g:300,life:.55});sparks(b.x,b.y,14,'#fff',{white:1,v0:260,v1:700,life:.35})},
+  zap(b,col){const top=b.y-b.h*.75;
+   const bolt=(sx)=>{const pts=[[sx,top]],N=9;for(let i=1;i<N;i++){const t=i/N;pts.push([sx+(b.x-sx)*t+R(-1,1)*b.w*.16,top+(b.y-top)*t])}pts.push([b.x+R(-1,1)*b.w*.05,b.y]);
+    const br=[];for(let k=0;k<2;k++){const s=pts[2+Math.floor(R(0,5))],q=[s],a=R(-.9,.9)+Math.PI/2;let x=s[0],y=s[1];for(let i=0;i<3;i++){x+=Math.cos(a+R(-.5,.5))*b.w*.2;y+=Math.sin(a+R(-.5,.5))*b.w*.2;q.push([x,y])}br.push(q)}return[pts,...br]};
+   const draw=(P,k,al)=>{c.beginPath();P.forEach((q,i)=>c[i?'lineTo':'moveTo'](q[0],q[1]));c.lineWidth=k;c.stroke()};
+   [0,.09,.2].forEach((d,n)=>{const B=bolt(b.x+R(-.5,.5)*b.w);
+    add(p=>{const al=(Math.floor(p*6)%2?.55:1)*(1-p*.4);c.globalCompositeOperation='lighter';c.lineJoin='round';c.lineCap='round';
+     c.shadowColor='#8fc4ff';c.shadowBlur=18;c.strokeStyle=A('#7fb4ff',al*.8);B.forEach((P,i)=>draw(P,i?3:b.w*.09));
+     c.shadowBlur=0;c.strokeStyle=A('#fff',al);B.forEach((P,i)=>draw(P,i?1:b.w*.035))},.14,d)});
+   add(p=>{c.globalCompositeOperation='lighter';glow(b.x,b.y,b.w*1.1,'#bcd8ff',.7*(1-p));c.fillStyle=A('#fff',.35*(1-p)*(1-p));c.fillRect(b.x-b.w*.6,b.y-b.h*.6,b.w*1.2,b.h*1.2)},.3);
+   sparks(b.x,b.y,22,'#f7ecaa',{v0:160,v1:520,g:400,life:.5,delay:.04})},
+  heal(b,col){col='#8fd49b';
+   add(p=>{c.globalCompositeOperation='lighter';c.strokeStyle=A(col,(1-p)*.8);c.lineWidth=2;c.beginPath();c.ellipse(b.x,b.y+b.h*.36,b.w*(.2+.5*p),b.w*(.06+.12*p),0,0,TAU);c.stroke();glow(b.x,b.y,b.w*.9,col,.22*Math.sin(p*Math.PI))},.9);
+   for(let i=0;i<22;i++){const x0=b.x+R(-.42,.42)*b.w,y0=b.y+R(.1,.4)*b.h,ph=R(0,TAU),sp=R(.35,.7)*b.h,sz=R(2,4.5),dl=R(0,.45),plus=i%6===0;
+    add(p=>{const y=y0-sp*p,x=x0+Math.sin(ph+p*6)*b.w*.04,al=Math.sin(p*Math.PI);c.globalCompositeOperation='lighter';
+     if(plus){c.strokeStyle=A('#d8ffe0',al);c.lineWidth=1.6;c.lineCap='round';const s=sz*1.8;c.beginPath();c.moveTo(x-s,y);c.lineTo(x+s,y);c.moveTo(x,y-s);c.lineTo(x,y+s);c.stroke()}
+     else{glow(x,y,sz*3,col,al*.5);c.fillStyle=A('#eaffee',al);c.beginPath();c.arc(x,y,sz*.55,0,TAU);c.fill()}},.85,dl)}},
+  up(b,col){
+   add(p=>{c.globalCompositeOperation='lighter';c.strokeStyle=A(col,(1-p)*.9);c.lineWidth=2;c.beginPath();c.ellipse(b.x,b.y+b.h*.38,b.w*(.15+.5*p),b.w*(.05+.12*p),0,0,TAU);c.stroke();
+    const g=c.createLinearGradient(0,b.y+b.h*.4,0,b.y-b.h*.5);g.addColorStop(0,A(col,.3*Math.sin(p*Math.PI)));g.addColorStop(1,A(col,0));c.fillStyle=g;c.fillRect(b.x-b.w*.38,b.y-b.h*.5,b.w*.76,b.h*.9)},.8);
+   for(let k=0;k<3;k++)add(p=>{const y=b.y+b.h*.3-p*b.h*.75,w=b.w*.3,al=Math.sin(p*Math.PI);c.globalCompositeOperation='lighter';c.strokeStyle=A(col,al);c.lineWidth=b.w*.045;c.lineCap='round';c.lineJoin='round';c.shadowColor=A(col,1);c.shadowBlur=10;
+    c.beginPath();c.moveTo(b.x-w,y+w*.55);c.lineTo(b.x,y-w*.2);c.lineTo(b.x+w,y+w*.55);c.stroke()},.7,k*.13);
+   for(let i=0;i<14;i++){const x0=b.x+R(-.4,.4)*b.w,y0=b.y+R(.1,.4)*b.h,sp=R(.4,.8)*b.h;add(p=>{c.globalCompositeOperation='lighter';c.fillStyle=A('#fff',Math.sin(p*Math.PI)*.9);c.beginPath();c.arc(x0,y0-sp*p,R(1,2)+.4,0,TAU);c.fill()},.7,R(0,.3))}},
+  down(b,col){col=col||'#ad8fd8';
+   add(p=>{const a=Math.sin(p*Math.PI);const g=c.createLinearGradient(0,b.y-b.h*.5,0,b.y+b.h*.5);g.addColorStop(0,`rgba(24,10,40,${.55*a})`);g.addColorStop(1,`rgba(24,10,40,0)`);c.fillStyle=g;c.fillRect(b.x-b.w*.55,b.y-b.h*.5,b.w*1.1,b.h)},.85);
+   for(let k=0;k<3;k++)add(p=>{const y=b.y-b.h*.4+p*b.h*.8,w=b.w*.3,al=Math.sin(p*Math.PI);c.globalCompositeOperation='lighter';c.strokeStyle=A(col,al*.95);c.lineWidth=b.w*.045;c.lineCap='round';c.lineJoin='round';c.shadowColor=A(col,1);c.shadowBlur=8;
+    c.beginPath();c.moveTo(b.x-w,y-w*.55);c.lineTo(b.x,y+w*.2);c.lineTo(b.x+w,y-w*.55);c.stroke()},.7,k*.13);
+   for(let i=0;i<16;i++){const x0=b.x+R(-.42,.42)*b.w,y0=b.y-b.h*R(.1,.45),sp=R(.3,.6)*b.h,s=R(1.5,3.4);add(p=>{c.fillStyle=A(i%2?'#6a4f9a':col,Math.sin(p*Math.PI)*.8);c.beginPath();c.ellipse(x0,y0+sp*p*p*1.4,s*.7,s*1.5,0,0,TAU);c.fill()},.8,R(0,.3))}},
+  stun(b){const cx=b.x,cy=b.y-b.h*.4,rx=b.w*.4,ry=b.w*.11,n=4;
+   sparks(cx,cy+b.h*.08,10,'#f6e38a',{a:-Math.PI/2,s:1.3,v0:100,v1:300,g:300,life:.4});
+   add(p=>{const al=p<.8?1:(1-p)/.2,sz=b.w*(.075+.012*Math.sin(p*20)),rot=p*5;c.globalCompositeOperation='lighter';
+    const S=[];for(let i=0;i<n;i++){const a=p*TAU*2.2+i*TAU/n;S.push([cx+Math.cos(a)*rx,cy+Math.sin(a)*ry,Math.sin(a)])}
+    S.sort((a,b2)=>a[2]-b2[2]).forEach(q=>{const k=.75+.25*q[2];glow(q[0],q[1],sz*2.6,'#f6e38a',.35*al*k);c.fillStyle=A('#fff3b8',al*k);star(q[0],q[1],sz*k,rot);c.fill()})},1.15)},
+  dodge(b,col){
+   for(let i=0;i<4;i++){const y=b.y+R(-.35,.35)*b.h;add(p=>{c.globalCompositeOperation='lighter';c.strokeStyle=A('#fff',Math.sin(p*Math.PI)*.55);c.lineWidth=1.5;c.lineCap='round';const x=b.x-b.w*.7+p*b.w*1.4;c.beginPath();c.moveTo(x-b.w*.35,y);c.lineTo(x,y);c.stroke()},.35,i*.04)}
+   for(let i=0;i<5;i++){const x0=b.x+R(-.2,.2)*b.w,s=R(.1,.2)*b.w;add(p=>{c.fillStyle=`rgba(200,200,210,${.16*(1-p)})`;c.beginPath();c.arc(x0+p*b.w*.3,b.y+b.h*.38-p*b.h*.08,s*(.6+p),0,TAU);c.fill()},.5,R(0,.1))}},
+  charge(b,col){
+   for(let i=0;i<18;i++){const a=R(0,TAU),r0=b.w*R(.75,1.2),dl=R(0,.2);
+    add(p=>{const e=p*p,r=r0*(1-e),x=b.x+Math.cos(a+p*1.4)*r,y=b.y+Math.sin(a+p*1.4)*r*1.2,r2=r0*(1-Math.max(0,p-.08)*Math.max(0,p-.08)),px=b.x+Math.cos(a+(p-.08)*1.4)*r2,py=b.y+Math.sin(a+(p-.08)*1.4)*r2*1.2;
+     c.globalCompositeOperation='lighter';c.strokeStyle=A(col,.9*Math.min(1,p*4)*(1-p*.6));c.lineWidth=1.8;c.lineCap='round';c.beginPath();c.moveTo(px,py);c.lineTo(x,y);c.stroke()},.42,dl)}
+   add(p=>{c.globalCompositeOperation='lighter';glow(b.x,b.y,b.w*(.2+.55*p),col,.5*p*(1-p*.5))},.5)}
+ };
+ return{
+  clear(){L=[];if(raf)cancelAnimationFrame(raf);raf=0;cv=$('fxc');if(cv&&cv.getContext)cv.getContext('2d').clearRect(0,0,cv.width,cv.height)},
+  play(f){if(!init())return;const b=box(f.side);if(!b||!FXS[f.k])return;FXS[f.k](b,f.c||'#f2f2f0',f.big?1.35:1)}}})();
 
 function restart(el,cls){if(!el)return;el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);el.addEventListener('animationend',()=>el.classList.remove(cls),{once:true})}
 function flash(id){restart($(id),'hit')}
@@ -462,8 +584,7 @@ function pop(side,v,cls){const el=$(side+'Pop');if(!el)return;el.textContent=v;e
 function showAct(a){const el=$(a.side+'Act');if(!el)return;el.innerHTML=`${svg(a.k)}<span>${a.n}</span>`;restart(el,'go')}
 function lunge(side){restart($(side+'PF'),'lg')}
 function shake(){restart($('screen'),'shake')}
-function playFx(f){const el=$(f.side+'Fx');if(!el)return;el.className='fxl';el.style.setProperty('--c',f.c||'#f2f2f0');void el.offsetWidth;el.classList.add(f.k);clearTimeout(el._t);el._t=setTimeout(()=>{el.className='fxl'},1000);
- if(f.k==='dodge')restart($(f.side+'PF'),'dg')}
+function playFx(f){FX.play(f);if(f.k==='dodge')restart($(f.side+'PF'),'dg')}
 function paintInfo(s,fl,popv){
  const er=Math.max(0,s.e.hp/s.e.max),pr=Math.max(0,s.p.hp/s.p.max);
  $('eBar').style.width=er*100+'%';$('eBar').style.background=hpColor(er);
@@ -484,7 +605,7 @@ function paintMenu(){
  if(ph==='menu'){
   const opts=[];if(!(P.ch.sk[0]&&P.ch.sk[0].t==='a'))opts.push(-1);P.ch.sk.forEach((s,i)=>opts.push(i));
   cards.innerHTML=opts.map(i=>{const s=i<0?BASIC:P.ch.sk[i],l=i<0?1:slv(P,i);
-   return `<button class="sc" ${P.mp<mpCost(s,i)?'disabled':''} onclick="act(${i})">${skFace(P.ch,i,s,l)}</button>`}).join('');
+   return `<button class="sc" ${P.mp<mpCost(s,i)?'disabled':''} onclick="act(${i})">${skFace(P.ch,i,s,l,'',true)}</button>`}).join('');
   $('sideL').innerHTML=`<button class="tb" onclick="openParty(false)">교체</button>`;
   $('sideR').innerHTML=`<button class="tb" onclick="quitRun()">철수</button>`}
  else if(ph==='forced')openParty(true)
