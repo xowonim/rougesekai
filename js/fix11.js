@@ -6,8 +6,8 @@
 .tabs .mini.on{color:var(--fg);border:none}
 .tabs .mini.on:after{content:'';position:absolute;left:1.6em;right:1.2em;bottom:-1px;height:1px;background:var(--fg)}
 .tabs .mini+.mini:before{content:'';position:absolute;left:0;top:50%;height:.9em;width:1px;background:var(--line);transform:translateY(-50%)}
-.enh,.sk .bt .mini{border:none;border-bottom:1px solid var(--dim);background:none;color:var(--fg);font-size:.8em;letter-spacing:.25em;padding:.25em 0 .25em .3em;cursor:pointer}
-.enh:hover,.sk .bt .mini:hover:not(:disabled){border:none;border-bottom:1px solid var(--fg)}
+.enh,.sk .bt .mini{border:1px solid var(--dim);border-radius:999px;background:none;color:var(--fg);font-size:.78em;letter-spacing:.15em;padding:.3em 1.1em .3em 1.25em;cursor:pointer;transition:background .15s,color .15s}
+.enh:hover,.sk .bt .mini:hover:not(:disabled){border:1px solid var(--fg);background:var(--fg);color:var(--bg,#0c0d11)}
 `;document.head.appendChild(st)})();
 const _showBk11=showBk;
 showBk=function(el){if(!S.mats[el.dataset.bk]||S.mats[el.dataset.bk]<=0){closeBk();return}_showBk11(el)};
