@@ -26,7 +26,7 @@ function poseApply(sd){
  im.style.transformOrigin='50% 100%';im.style.transform=`scale(${Math.min(1,h/HT_REF).toFixed(3)})`}
 function poseRefresh(){poseApply('e');poseApply('p')}
 function poseSet(sd,pose,ms){const s=PST[sd];s.pose=pose;s.t=Date.now()+ms;clearTimeout(s.tm);poseApply(sd);s.tm=setTimeout(()=>poseApply(sd),ms+20)}
-(function(){const st=document.createElement('style');st.textContent='.pf.ko.kp{opacity:1}';document.head.appendChild(st)})();
+(function(){const st=document.createElement('style');st.textContent='.pf.ko.kp{opacity:1}.tile img,.pf img,.afull img{image-rendering:pixelated}';document.head.appendChild(st)})();
 
 const _db19=drawBattle;
 drawBattle=function(){PHP.e=null;PHP.p=null;PHP.pid='';_db19();
