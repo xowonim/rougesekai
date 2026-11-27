@@ -22,10 +22,13 @@ Object.assign(PROF,{
  sasin_ju:{full:'주작',rom:'Vermilion / 朱雀',aff:'‘규율’의 눈동자',sex:'여성',age:'외관상 38세',ht:'220cm',race:'사신',el:'火',abil:'치유를 다루는 능력',
   intro:'원향족의 주작 가문에게 힘을 빌려주고 있는 사신. 한 때 ‘세상’에 살았으나, 모종의 이유로 ‘허공’에 영원히 머무르게 되었다.'}});
 
-/* ---------- 상태: 속도 상승 · 공격 저하(해제 불가) · 중독 유지 ---------- */
+/* ---------- 상태: 속도 상승 · 공격 저하(해제 불가) · 상태이상 유지 ---------- */
 const SPD_STK=.2,ATK_DN=.1;
 const _rbs13=resetBattleState;
-resetBattleState=function(f){const p=f.psn;_rbs13(f);f.spdStk=0;f.spdT=0;f.dbStk=0;f.psn=(f.hp>0&&f.side==='p'&&p)?p:0};
+const KEEP=['psn','conf','confAge','dot','shock','shockT','stun','seal','sealAge','love','loveAge','d','dT'];
+const hasStatus=f=>!!(f.dot||f.psn||f.conf||f.shock||f.stun>0||(f.d&&(f.d.atk>0||f.d.def>0))||(f.seal!==null&&f.seal!==undefined)||f.love);
+resetBattleState=function(f){const k=(f.hp>0&&f.side==='p'&&hasStatus(f))?KEEP.map(x=>[x,f[x]]):null;
+ _rbs13(f);f.spdStk=0;f.spdT=0;f.dbStk=0;if(k)k.forEach(([x,v])=>{f[x]=v})};
 const _st13=st;
 st=function(f,k){let v=_st13(f,k);
  if(k==='spd'&&f.spdStk)v*=1+SPD_STK*f.spdStk;
@@ -70,7 +73,7 @@ ITEMS.orb_g.d='방어력 상승\n(5스테이지)';ITEMS.orb_s.d='명중률 상�
 ITEMS.apr.d='+1';ITEMS.bul.d='부활\nHP 50%';ITEMS.map.d='다음 지역 선택';
 const RPROB={1:52,2:30,3:15,4:3};
 rewardCards=function(){
- const al=run.party.filter(f=>f.hp>0),down=run.party.some(f=>f.hp<=0),dmg=al.some(f=>f.hp<f.maxhp),psn=al.some(f=>f.psn);
+ const al=run.party.filter(f=>f.hp>0),down=run.party.some(f=>f.hp<=0),dmg=al.some(f=>f.hp<f.maxhp),psn=al.some(hasStatus);
  const ok=id=>{const it=ITEMS[id];
   if(id==='bul')return down;if(it.pct)return dmg;if(id==='ade')return psn;
   if(it.orb)return (OB()[it.orb]||0)<ORB_MAX;return true};
@@ -90,15 +93,15 @@ function finishReward(){
  save();run.wave++;nextBattle()}
 function rewardTarget(id){
  const rows=run.party.map((f,i)=>{
-  const okk=id==='bul'?f.hp<=0:id==='ade'?(f.hp>0&&!!f.psn):(f.hp>0&&f.hp<f.maxhp),r=Math.max(0,f.hp/f.maxhp),mp=Math.max(0,f.mp/f.mpm);
+  const okk=id==='bul'?f.hp<=0:id==='ade'?(f.hp>0&&hasStatus(f)):(f.hp>0&&f.hp<f.maxhp),r=Math.max(0,f.hp/f.maxhp),mp=Math.max(0,f.mp/f.mpm);
   return `<button class="prow2" ${okk?'':'disabled'} onclick="event.stopPropagation();rewardUse('${id}',${i})">${tileHtml(f.ch)}<div class="pi"><div class="pt"><span class="pn">${f.ch.name}</span><span>Lv.${f.lv}</span></div>
    <div class="pbar"><span>HP</span><div class="hb"><i style="width:${r*100}%;background:${hpColor(r)}"></i></div><span class="pv">${f.hp}/${f.maxhp}</span></div>
    <div class="pbar"><span>MP</span><div class="hb"><i style="width:${mp*100}%;background:#6fa0dc"></i></div><span class="pv">${f.mp}/${f.mpm}</span></div>
    <div class="pst">${stIc(f)}</div></div></button>`}).join('');
  $('ovl').innerHTML=`<div class="ov"><div class="plist">${rows}</div></div>`}
 function rewardUse(id,i){const f=run.party[i],m=ITEMS[id];
- if(id==='bul'){f.hp=Math.round(f.maxhp*.5);resetBattleState(f)}
- else if(id==='ade'){cleanse(f);f.psn=0}
+ if(id==='bul'){cleanse(f);f.hp=Math.round(f.maxhp*.5);resetBattleState(f)}
+ else if(id==='ade'){cleanse(f)}
  else f.hp=Math.min(f.maxhp,f.hp+Math.round(f.maxhp*m.pct));
  $('ovl').innerHTML='';finishReward()}
 function rewardMap(){
