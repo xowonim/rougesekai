@@ -5,7 +5,7 @@ function poseLoad(id){
  if(!id||PMAP[id])return;const m=PMAP[id]={};
  Object.keys(PSUF).forEach(p=>{
   const tryExt=i=>{const ext=['gif','png'][i];if(!ext){m[p]=null;return}
-   const u=`chars/battle/${id}${PSUF[p]}.${ext}`,im=new Image();
+   const u=`chars/battle/${id}${PSUF[p]}.${ext}?v=${IMGV}`,im=new Image();
    im.onload=()=>{m[p]=u;poseRefresh()};im.onerror=()=>tryExt(i+1);im.src=u};
   tryExt(0)})}
 const PST={e:{pose:'',t:0,tm:0},p:{pose:'',t:0,tm:0}},PHP={e:null,p:null,pid:''};

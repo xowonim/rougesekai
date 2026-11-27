@@ -17,9 +17,13 @@ toArc=function(){if(!S.chars[cur])cur='ruihu';_ta21()};
  st.textContent='.tile:not(.noimg)>b,.afull:not(.noimg)>b,.pf:not(.noimg)>b{visibility:hidden}.afull:not(.noimg),.pf:not(.noimg){border-color:transparent;background:none}';
  document.head.appendChild(st)})();
 const IMGBAD=new Set(),SEL='.tile,.afull,.pf';
-const markBad=el=>{const im=el.querySelector(':scope>img');if(im&&IMGBAD.has(im.getAttribute('src')))el.classList.add('noimg')};
-document.addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&t.getAttribute('src')){IMGBAD.add(t.getAttribute('src'));const p=t.parentElement;if(p&&p.matches(SEL))p.classList.add('noimg')}},true);
+const markBad=el=>{const im=el.querySelector(':scope>img');if(im&&IMGBAD.has(im.getAttribute('src').split('?')[0]))el.classList.add('noimg')};
+document.addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&t.getAttribute('src')){IMGBAD.add(t.getAttribute('src').split('?')[0]);const p=t.parentElement;if(p&&p.matches(SEL))p.classList.add('noimg')}},true);
 new MutationObserver(ms=>{ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.matches(SEL))markBad(n);n.querySelectorAll(SEL).forEach(markBad)}))}).observe(document.body,{childList:true,subtree:true});
 const _pa21=poseApply;
 poseApply=function(sd){_pa21(sd);const el=document.getElementById(sd+'PF'),id=sideId(sd),m=id&&PMAP[id];if(el&&m)el.classList.toggle('noimg',m.base===null)};
 setInterval(()=>{if(typeof run!=='undefined'&&run&&document.getElementById('ePF'))poseRefresh()},250);
+/* 이미지 캐시 갱신: 홈 화면 앱 등에서 예전 이미지가 계속 보이는 문제 방지 */
+const IMGV=Date.now();
+const bust=im=>{const s=im.getAttribute('src');if(s&&/^chars\//.test(s)&&s.indexOf('?')<0)im.setAttribute('src',s+'?v='+IMGV)};
+new MutationObserver(ms=>{ms.forEach(m=>{if(m.type==='attributes'){if(m.target.tagName==='IMG')bust(m.target);return}m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.tagName==='IMG')bust(n);n.querySelectorAll&&n.querySelectorAll('img').forEach(bust)})})}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['src']});
