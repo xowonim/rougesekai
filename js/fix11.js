@@ -11,3 +11,7 @@
 `;document.head.appendChild(st)})();
 const _showBk11=showBk;
 showBk=function(el){if(!S.mats[el.dataset.bk]||S.mats[el.dataset.bk]<=0){closeBk();return}_showBk11(el)};
+
+/* 오타 정정 */
+REG.glisha.name='글리샬라볼라스';
+CHM.aledeia.sk[0]=A('염탐','생명체의 몸 속에 깃들어 염탐한다.',40);
