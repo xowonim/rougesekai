@@ -1,4 +1,4 @@
-/* 4차 수정: 수련의 서 아이콘(종이 / 선장본 / 격친 책), CAST 레이아웃, 파비콘, 가챠 연출 로드 */
+/* 4차 수정: 수련의 서 아이콘(종이 / 선장본 / 격친 책), CAST 레이아웃, 파비콘, 추가 스크립트 로드 */
 const _bkSvg=bkSvg;
 bkSvg=function(k){if(k[0]!=='l')return _bkSvg(k);
  const n={s:1,m:2,l:3}[k[1]]||1;let g='';
@@ -12,4 +12,4 @@ bkSvg=function(k){if(k[0]!=='l')return _bkSvg(k);
  return `<svg class="si" viewBox="0 0 32 32">${g}</svg>`};
 (function(){const st=document.createElement('style');st.textContent='.banner{top:14%;bottom:38%}.pbtns{left:24%;right:24%;bottom:26%}.pbtns button{padding:.5em 1em;font-size:.9em}';document.head.appendChild(st);
  const l=document.createElement('link');l.rel='icon';l.type='image/svg+xml';l.href='img/favicon.svg?v='+Date.now();document.head.appendChild(l);
- ['gacha','skills'].forEach(n=>{const s=document.createElement('script');s.async=false;s.src='js/'+n+'.js?t='+Date.now();document.body.appendChild(s)})})();
+ ['gacha','skills','fix6'].forEach(n=>{const s=document.createElement('script');s.async=false;s.src='js/'+n+'.js?t='+Date.now();document.body.appendChild(s)})})();
