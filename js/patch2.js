@@ -12,4 +12,4 @@ bkSvg=function(k){if(k[0]!=='l')return _bkSvg(k);
  return `<svg class="si" viewBox="0 0 32 32">${g}</svg>`};
 (function(){const st=document.createElement('style');st.textContent='.banner{top:14%;bottom:38%}.pbtns{left:24%;right:24%;bottom:26%}.pbtns button{padding:.5em 1em;font-size:.9em}';document.head.appendChild(st);
  const l=document.createElement('link');l.rel='icon';l.type='image/svg+xml';l.href='img/favicon.svg?v='+Date.now();document.head.appendChild(l);
- ['gacha','skills','fix6','fix7','fix8','fix9','fix10','fix11','fix12','fix13','fix14','fix15','fix16','fix17'].forEach(n=>{const s=document.createElement('script');s.async=false;s.src='js/'+n+'.js?t='+Date.now();document.body.appendChild(s)})})();
+ ['gacha','skills','fix6','fix7','fix8','fix9','fix10','fix11','fix12','fix13','fix14','fix15','fix16','fix17','fix18'].forEach(n=>{const s=document.createElement('script');s.async=false;s.src='js/'+n+'.js?t='+Date.now();document.body.appendChild(s)})})();
