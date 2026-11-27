@@ -4,7 +4,8 @@
    - 지도 이미지  : maps/<지역 id>.png  (없으면 기본 배경색 사용)
    - 캐릭터 일러  : chars/<캐릭터 id>.png (없으면 이름 첫 글자 표시)
    ===================================================================== */
-const CFG={MAP_STAGES:10,PARTY_MAX:3,PULL_COST:100,PULL10_COST:900,LV_MAX:50,PITY:40,START_COIN:300,REGEN:0.15};
+const CFG={MAP_STAGES:10,PARTY_MAX:3,PULL_COST:160,PULL10_COST:1600,LV_MAX:50,SK_MAX:10,BT_MAX:6,START_COIN:480,REGEN:0.15,
+ AP_CHAR:{4:5,5:50},AP_PER_COIN:16,AP_DUP:{4:1,5:2,6:3}};
 
 /* ---------- 기술 생성 도우미 ---------- */
 const A=(n,d,p,o={})=>({n,d,t:'a',p,...o});
@@ -205,7 +206,7 @@ const CH=[
 ];
 CH.forEach(c=>c.sk.forEach(s=>s.pp=defPP(s)));
 const CHM={};CH.forEach(c=>CHM[c.id]=c);
-const BASIC={n:'기본 공격',t:'a',p:40,d:''};
+const BASIC={n:'저항',t:'a',p:30,d:''};
 
 /* ---------- 지역 ---------- */
 const MAPS=[
@@ -224,5 +225,3 @@ const mapOf=w=>MAPS[Math.floor((w-1)/CFG.MAP_STAGES)%MAPS.length];
 
 /* ---------- 속성 ---------- */
 const EC={'木':'var(--木)','火':'var(--火)','土':'var(--土)','金':'var(--金)','水':'var(--水)','？':'var(--无)','+':'var(--阳)','-':'var(--阴)'};
-const BEATS={'木':'土','土':'水','水':'火','火':'金','金':'木'};
-function elMult(a,d){if(BEATS[a]===d)return 1.4;if(BEATS[d]===a)return .75;return 1}
