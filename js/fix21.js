@@ -52,14 +52,14 @@ drawEnh=function(){_de21();const e=document.getElementById('enh'),C=rcolor(cur);
 
 /* 강화 창 · VIRTUE 모양 */
 (function(){const st=document.createElement('style');
- st.textContent='.enhbox .er button{border-color:transparent}.enhbox .ef{justify-content:center;gap:4em;margin-top:.4em}.enhbox .ef button{border-radius:999px;padding:.75em 2.8em;min-width:8em;font-size:1em;letter-spacing:.12em;justify-content:center}.bs i{border-radius:50%}';
+ st.textContent='.enhbox .er button{border-color:transparent}.enhbox .ef{justify-content:center;gap:4em;margin-top:.4em}.enhbox .ef button{border-radius:999px;padding:.5em 2.8em;min-width:8em;font-size:1em;letter-spacing:.12em;justify-content:center}.bs i{border-radius:50%;font-size:.75em}.rk{border-width:.5px}';
  document.head.appendChild(st)})();
 
 /* 효과음 */
 Object.assign(SFX,{
- enh:()=>{tone(520,.28,'triangle',.06,780,0,{echo:1});tone(780,.34,'sine',.045,0,.09,{echo:1})},
- lvup:()=>{[523,659,784,1047,1319].forEach((f,i)=>{tone(f,.5,'triangle',.07,0,i*.08,{echo:1});tone(f*2,.35,'sine',.02,0,i*.08)});noise(.4,.05,1500,6000,0,'bandpass',2)},
- start:()=>{noise(.6,.07,300,4200,0,'bandpass',1.5);tone(196,.8,'sine',.1,392,0,{echo:1});tone(392,.7,'triangle',.06,0,.2,{echo:1});tone(588,.8,'sine',.05,0,.34,{echo:1});tone(784,.8,'sine',.03,0,.46,{echo:1})}});
+ enh:()=>{[1319,1568,2093].forEach((f,i)=>tone(f,.16,'triangle',.05,0,i*.055));tone(3136,.14,'sine',.025,0,.17);tone(2637,.1,'sine',.02,0,.2)},
+ lvup:()=>{[1047,1319,1568,2093,2637].forEach((f,i)=>{tone(f,.4,'triangle',.06,0,i*.08,{echo:1});tone(f*2,.3,'sine',.02,0,i*.08)});noise(.3,.04,3000,8000,0,'bandpass',2,0)},
+ start:()=>{[1319,1568,1976,2637].forEach((f,i)=>{tone(f,.22,'triangle',.055,0,i*.07);tone(f*2,.14,'sine',.02,0,i*.07+.01)});noise(.06,.05,5000,9000,0,'highpass',1,0);noise(.05,.04,6000,10000,.07,'highpass',1,0);noise(.05,.04,6500,10000,.14,'highpass',1,0);tone(3136,.35,'sine',.03,0,.28,{echo:1})}});
 const _eg21=enhGo;
 enhGo=function(){if(!ENH)return;const o=S.chars[cur],i=ENH.i,ch=ENH.kind==='char',l0=ch?o.lv:o.sk[i].lv;
  _eg21();const o2=S.chars[cur],l1=ch?o2.lv:o2.sk[i].lv;sfx(l1>l0?'lvup':'enh')};
