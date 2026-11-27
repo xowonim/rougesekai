@@ -27,3 +27,10 @@ setInterval(()=>{if(typeof run!=='undefined'&&run&&document.getElementById('ePF'
 const IMGV=Date.now();
 const bust=im=>{const s=im.getAttribute('src');if(s&&/^chars\//.test(s)&&s.indexOf('?')<0)im.setAttribute('src',s+'?v='+IMGV)};
 new MutationObserver(ms=>{ms.forEach(m=>{if(m.type==='attributes'){if(m.target.tagName==='IMG')bust(m.target);return}m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.tagName==='IMG')bust(n);n.querySelectorAll&&n.querySelectorAll('img').forEach(bust)})})}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['src']});
+
+/* 아카이브·파티 편집 순서: 오토리를 맨 앞에 */
+(function(){const i=CH.findIndex(c=>c.id==='otori');if(i>0)CH.unshift(CH.splice(i,1)[0])})();
+/* 파티가 비었을 때 보유 중인 첫 캐릭터로 대체 */
+toPrep=function(){mode='start';party=S.party.filter(id=>S.chars[id]).slice(0,CFG.PARTY_MAX);
+ if(!party.length){const f=CH.find(c=>S.chars[c.id]);party=f?[f.id]:[]}
+ cur=party[0]||(CH.find(c=>S.chars[c.id])||CH[0]).id;drawPrep()};
