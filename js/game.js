@@ -6,29 +6,45 @@ const ROLE={a:{hp:.92,atk:1.15,def:.95,spd:1},t:{hp:1.2,atk:.92,def:1.2,spd:.9},
 function calcStats(ch,lv,bt){const b=BASE[ch.star],r=ROLE[ch.role],g=(1+.07*(lv-1))*(1+.08*(bt||0));
  return{hp:Math.round(b.hp*r.hp*g),atk:Math.round(b.atk*r.atk*g),def:Math.round(b.def*r.def*g),spd:Math.round(b.spd*r.spd*(1+.02*(lv-1)))}}
 const expNeed=lv=>20+lv*10;
-const MATS={s:{n:'소',x:100},m:{n:'중',x:350},l:{n:'대',x:1000}};
+const skNeed=lv=>30+lv*25;
+const skMul=lv=>1+.02*((lv||1)-1);
+const BOOK={
+ ls:{n:'수련의 서 소',x:100},lm:{n:'수련의 서 중',x:350},ll:{n:'수련의 서 대',x:1000},
+ ss:{n:'오덕의 서 소',x:30},sm:{n:'오덕의 서 중',x:100},sl:{n:'오덕의 서 대',x:300}};
+const SZ={s:'소',m:'중',l:'대'};
 
-const KEY='kamisekai_rogue_v1';
+const KEY='kamisekai_rogue_v2';
 let S;
-function freshSave(){return{coin:CFG.START_COIN,chars:{luihu:{lv:1,exp:0,bt:0},cheonryong:{lv:1,exp:0,bt:0}},mats:{s:3,m:0,l:0},pity:0,best:0,runs:0,pulls:0,party:['luihu','cheonryong']}}
+const newChar=()=>({lv:1,exp:0,bt:0,sk:[]});
+function ensureChar(id){const o=S.chars[id],c=CHM[id];if(!o||!c)return;
+ if(!Array.isArray(o.sk))o.sk=[];
+ while(o.sk.length<c.sk.length)o.sk.push({lv:1,exp:0})}
+function freshSave(){return{coin:CFG.START_COIN,ap:0,chars:{luihu:newChar(),cheonryong:newChar()},
+ mats:{ls:3,lm:0,ll:0,ss:3,sm:0,sl:0},best:0,runs:0,party:['luihu','cheonryong']}}
 function load(){try{const r=localStorage.getItem(KEY);S=r?JSON.parse(r):freshSave()}catch(e){S=freshSave()}
- const f=freshSave();for(const k in f)if(S[k]===undefined)S[k]=f[k]}
+ const f=freshSave();for(const k in f)if(S[k]===undefined)S[k]=f[k];
+ for(const k in f.mats)if(S.mats[k]===undefined)S.mats[k]=0;
+ for(const id in S.chars)ensureChar(id)}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
 const $=id=>document.getElementById(id);
 function josa(w,p){const c=w.charCodeAt(w.length-1);const has=c>=0xAC00&&c<=0xD7A3&&((c-0xAC00)%28)!==0;const[a,b]=p.split('/');return w+(has?a:b)}
 const stars=n=>'★'.repeat(n);
-const elChip=e=>`<span class="el" style="--c:${EC[e]}">${e}</span>`;
 const imgTag=ch=>`<img src="chars/${ch.id}.png" alt="" onerror="this.remove()">`;
-const ico=(ch,extra)=>`<div class="ico ${extra||''}" style="--c:${EC[ch.el]}"><b>${ch.name[0]}</b>${imgTag(ch)}</div>`;
-const hpColor=r=>r>.5?'#58c868':r>.2?'#e8c038':'#e04838';
-function fx(s){const a=[];
- if(s.t==='a'){a.push('위력 '+s.p);if(s.stun)a.push('기절 '+s.stun+'%');if(s.drain)a.push('흡혈');if(s.recoil)a.push('반동');if(s.dot)a.push('지속');if(s.ign)a.push('방어 무시');if(s.acc&&s.acc<95)a.push('명중 '+s.acc+'%');if(s.selfStun)a.push('다음 턴 정지')}
- else if(s.t==='h')a.push('회복 '+s.p+'%');
- else if(s.t==='b')a.push('공격 +'+s.p+'%');
- else if(s.t==='g')a.push('방어 +'+s.p+'%');
- else if(s.t==='w')a.push('상대 공방 -'+s.p+'%');
+const hpColor=r=>r>.5?'#8fd49b':r>.2?'#e8c870':'#e0705a';
+
+/* 아이콘 */
+const TG=`<svg class="ic" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#2f5fb0"/><path d="M50 2A48 48 0 0 1 50 98A24 24 0 0 1 50 50A24 24 0 0 0 50 2Z" fill="#d8453a"/><circle cx="50" cy="26" r="8" fill="#2f5fb0"/><circle cx="50" cy="74" r="8" fill="#d8453a"/></svg>`;
+const AP=`<svg class="ic" viewBox="0 0 100 100"><circle cx="50" cy="56" r="38" fill="#f0a24a"/><path d="M50 22C50 40 50 60 50 94" stroke="#c9782c" stroke-width="4" fill="none" opacity=".6"/><path d="M52 20C58 4 76 2 84 8C80 22 64 26 52 20Z" fill="#7fc08a"/></svg>`;
+const wallet=()=>`<div class="wallet"><span>${TG}${S.coin.toLocaleString()}</span><span>${AP}${S.ap.toLocaleString()}</span></div>`;
+
+function fx(s,lv){const k=skMul(lv),p=Math.round((s.p||0)*k),a=[];
+ if(s.t==='a'){a.push('위력 '+p);if(s.stun)a.push('기절 '+s.stun+'%');if(s.drain)a.push('흡혈');if(s.recoil)a.push('반동');if(s.dot)a.push('지속');if(s.ign)a.push('방어 무시');if(s.acc&&s.acc<95)a.push('명중 '+s.acc+'%');if(s.selfStun)a.push('다음 턴 정지')}
+ else if(s.t==='h')a.push('회복 '+p+'%');
+ else if(s.t==='b')a.push('공격 +'+p+'%');
+ else if(s.t==='g')a.push('방어 +'+p+'%');
+ else if(s.t==='w')a.push('상대 공방 -'+p+'%');
  else if(s.t==='z')a.push('다음 공격 회피');
  return a.join(' · ')}
 
@@ -36,15 +52,17 @@ function fx(s){const a=[];
    전투 로직
    ===================================================================== */
 let run=null,busy=false,skipFn=null,lastHp={};
-function newFighter(ch,lv,bt,side,mult){const s=calcStats(ch,lv,bt);mult=mult||{};const k=mult.all||1;
- const f={ch,lv,side,maxhp:Math.round(s.hp*(mult.hp||1)*k),atk:s.atk*(mult.atk||1)*k,def:s.def*(mult.def||1)*k,spd:s.spd,hp:0};
+function newFighter(ch,lv,bt,side,mult,sl){const s=calcStats(ch,lv,bt);mult=mult||{};const k=mult.all||1;
+ const f={ch,lv,side,sl:sl||[],maxhp:Math.round(s.hp*(mult.hp||1)*k),atk:s.atk*(mult.atk||1)*k,def:s.def*(mult.def||1)*k,spd:s.spd,hp:0};
  f.hp=f.maxhp;resetBattleState(f);return f}
-function resetBattleState(f){f.m={atk:0,def:0};f.mT=0;f.d={atk:0,def:0};f.dT=0;f.evade=0;f.stun=0;f.stunImm=0;f.dot=null;f.pp=f.ch.sk.map(s=>s.pp)}
+function resetBattleState(f){f.m={atk:0,def:0};f.mT=0;f.d={atk:0,def:0};f.dT=0;f.evade=0;f.stun=0;f.stunImm=0;f.dot=null;
+ f.pp=f.ch.sk.map((s,i)=>(i===0&&s.t==='a')?Infinity:(s.pp||defPP(s)))}
 function st(f,k){let v=f[k];if(f.side==='p'&&run)v*=1+run.buf[k];
  if(k==='atk'||k==='def')v*=Math.max(.4,1+f.m[k]-f.d[k]);return v}
+const slv=(f,i)=>(i>=0&&f.sl[i]&&f.sl[i].lv)||1;
 
 function startRun(ids){
- run={wave:1,party:ids.map(id=>{const c=S.chars[id];return newFighter(CHM[id],c.lv,c.bt,'p')}),active:0,buf:{atk:0,def:0,spd:0},gained:0,won:0,enemy:null,phase:'menu',sub:'cmd',note:''};
+ run={wave:1,party:ids.map(id=>{const c=S.chars[id];return newFighter(CHM[id],c.lv,c.bt,'p',null,c.sk)}),active:0,buf:{atk:0,def:0,spd:0},gained:0,won:0,enemy:null,phase:'menu',sub:'cmd',note:''};
  S.runs++;save();nextBattle()}
 
 function makeEnemy(w){
@@ -58,47 +76,46 @@ function makeEnemy(w){
 function nextBattle(){
  const w=run.wave,m=mapOf(w);
  run.enemy=makeEnemy(w);
- run.party.forEach(f=>{f.m={atk:0,def:0};f.mT=0;f.d={atk:0,def:0};f.dT=0;f.evade=0;f.stun=0;f.stunImm=0;f.dot=null;f.pp=f.ch.sk.map(s=>s.pp)});
+ run.party.forEach(resetBattleState);
  if(run.party[run.active].hp<=0)run.active=run.party.findIndex(f=>f.hp>0);
  const e=run.enemy;
- run.note=((w-1)%CFG.MAP_STAGES===0?`${m.name}에 도착했다. `:'')+(e.boss?`지역의 주인, ${josa(e.ch.name,'이/가')} 나타났다!`:`${josa(e.ch.name,'이/가')} 앞을 가로막는다.`);
+ run.note=((w-1)%CFG.MAP_STAGES===0?`${m.name}.  `:'')+(e.boss?`${josa(e.ch.name,'이/가')} 모습을 드러냈다.`:`${josa(e.ch.name,'이/가')} 앞을 가로막는다.`);
  run.phase='menu';run.sub='cmd';
  drawBattle()}
 
 function snap(){const P=run.party[run.active],E=run.enemy;
- return{p:{id:P.ch.id,name:P.ch.name,hp:P.hp,max:P.maxhp,lv:P.lv,el:P.ch.el},e:{hp:E.hp,max:E.maxhp}}}
+ return{p:{id:P.ch.id,name:P.ch.name,hp:P.hp,max:P.maxhp,lv:P.lv},e:{hp:E.hp,max:E.maxhp}}}
 
-function hitCalc(a,d,sk){
+function hitCalc(a,d,sk,k){
  const def=st(d,'def')*(1-(sk.ign||0));
- const em=elMult(a.ch.el,d.ch.el);
  const crit=Math.random()<.06;
- const dmg=sk.p*(st(a,'atk')/def)*.34*em*(.9+Math.random()*.2)*(crit?1.5:1);
- return{dmg:Math.max(1,Math.round(dmg)),em,crit}}
+ const dmg=sk.p*k*(st(a,'atk')/def)*.34*(.9+Math.random()*.2)*(crit?1.5:1);
+ return{dmg:Math.max(1,Math.round(dmg)),crit}}
 
 function perform(a,d,idx,ev){
- const say=(t)=>ev.push({t,s:snap()});
- const sk=idx<0?BASIC:a.ch.sk[idx];
- if(a.stun>0){a.stun--;a.stunImm=1;say(`${josa(a.ch.name,'은/는')} 움직이지 못한다!`);return}
+ const say=(t,pop)=>ev.push({t,s:snap(),pop});
+ const sk=idx<0?BASIC:a.ch.sk[idx],k=skMul(slv(a,idx));
+ if(a.stun>0){a.stun--;a.stunImm=1;say(`${josa(a.ch.name,'은/는')} 움직이지 못한다.`);return}
  if(idx>=0)a.pp[idx]--;
- say(`${a.ch.name}의 ${sk.n}!`);
+ say(`${a.ch.name}의 ${sk.n}`);
  if(sk.t==='a'){
-  if(Math.random()*100>=(sk.acc||95)){say('공격이 빗나갔다.');return}
-  if(d.evade>0){d.evade=0;say(`${josa(d.ch.name,'은/는')} 공격을 피했다!`);return}
-  const h=hitCalc(a,d,sk);
+  if(Math.random()*100>=(sk.acc||95)){say('빗나갔다.');return}
+  if(d.evade>0){d.evade=0;say(`${josa(d.ch.name,'은/는')} 공격을 피했다.`);return}
+  const h=hitCalc(a,d,sk,k);
   d.hp=Math.max(0,d.hp-h.dmg);
-  say(`${d.ch.name}에게 ${h.dmg} 피해!`+(h.crit?' 급소에 맞았다!':'')+(h.em>1?' 효과가 굉장했다!':h.em<1?' 효과가 별로인 듯하다...':''));
-  if(sk.drain&&a.hp>0){const g=Math.round(h.dmg*.5);a.hp=Math.min(a.maxhp,a.hp+g);say(`${a.ch.name}의 생명력이 ${g} 회복되었다.`)}
-  if(sk.recoil&&a.hp>0){const r=Math.round(h.dmg*sk.recoil/100);a.hp=Math.max(0,a.hp-r);say(`${a.ch.name}의 반동 피해 ${r}.`)}
-  if(d.hp>0&&sk.stun&&d.stun<=0&&!d.stunImm&&Math.random()*100<sk.stun){d.stun=1;say(`${josa(d.ch.name,'은/는')} 움직일 수 없게 되었다!`)}
+  say(`${d.ch.name}에게 ${h.dmg} 피해`+(h.crit?' · 치명타':''),{side:d.side,v:'-'+h.dmg});
+  if(sk.drain&&a.hp>0){const g=Math.round(h.dmg*.5);a.hp=Math.min(a.maxhp,a.hp+g);say(`${a.ch.name} HP ${g} 흡수`,{side:a.side,v:'+'+g,heal:1})}
+  if(sk.recoil&&a.hp>0){const r=Math.round(h.dmg*sk.recoil/100);a.hp=Math.max(0,a.hp-r);say(`${a.ch.name} 반동 ${r}`,{side:a.side,v:'-'+r})}
+  if(d.hp>0&&sk.stun&&d.stun<=0&&!d.stunImm&&Math.random()*100<sk.stun){d.stun=1;say(`${josa(d.ch.name,'은/는')} 움직일 수 없다.`)}
   if(d.hp>0&&sk.dot){d.dot={pct:sk.dot,t:3};say(`${josa(d.ch.name,'은/는')} 지속 피해를 입는다.`)}
   if(sk.selfStun&&a.hp>0)a.stun=1;
  }else if(sk.t==='h'){
-  const g=Math.round(a.maxhp*sk.p/100),before=a.hp;a.hp=Math.min(a.maxhp,a.hp+g);
+  const g=Math.round(a.maxhp*sk.p*k/100),before=a.hp;a.hp=Math.min(a.maxhp,a.hp+g);
   a.d={atk:0,def:0};a.dT=0;a.dot=null;
-  say(`${a.ch.name}의 HP가 ${a.hp-before} 회복되었다.`);
- }else if(sk.t==='b'){a.m.atk=Math.max(a.m.atk,sk.p/100);a.mT=3;say(`${a.ch.name}의 공격이 올랐다!`)}
- else if(sk.t==='g'){a.m.def=Math.max(a.m.def,sk.p/100);a.mT=3;say(`${a.ch.name}의 방어가 올랐다!`)}
- else if(sk.t==='w'){d.d.atk=Math.max(d.d.atk,sk.p/100);d.d.def=Math.max(d.d.def,sk.p/100);d.dT=3;say(`${d.ch.name}의 공격과 방어가 떨어졌다!`)}
+  say(`${a.ch.name} HP ${a.hp-before} 회복`,{side:a.side,v:'+'+(a.hp-before),heal:1});
+ }else if(sk.t==='b'){a.m.atk=Math.max(a.m.atk,sk.p*k/100);a.mT=3;say(`${a.ch.name} 공격 상승`)}
+ else if(sk.t==='g'){a.m.def=Math.max(a.m.def,sk.p*k/100);a.mT=3;say(`${a.ch.name} 방어 상승`)}
+ else if(sk.t==='w'){d.d.atk=Math.max(d.d.atk,sk.p*k/100);d.d.def=Math.max(d.d.def,sk.p*k/100);d.dT=3;say(`${d.ch.name} 공방 하락`)}
  else if(sk.t==='z'){a.evade=2;say(`${josa(a.ch.name,'은/는')} 다음 공격에 대비한다.`)}
 }
 
@@ -114,12 +131,12 @@ function aiPick(e,p){
   cand.push(i)});
  if(e.hp<e.maxhp*.4){const h=cand.find(i=>e.ch.sk[i].t==='h');if(h!==undefined&&Math.random()<.75)return h}
  if(cand.length&&Math.random()<.7)return rnd(cand);
- return -1}
+ return (e.ch.sk[0]&&e.ch.sk[0].t==='a')?0:-1}
 
 function endOfTurn(ev){
- const say=(t)=>ev.push({t,s:snap()});
+ const say=(t,pop)=>ev.push({t,s:snap(),pop});
  [run.party[run.active],run.enemy].forEach(f=>{
-  if(f.hp>0&&f.dot){const v=Math.max(1,Math.round(f.maxhp*f.dot.pct/100));f.hp=Math.max(0,f.hp-v);say(`${f.ch.name}의 HP가 지속 피해로 ${v} 줄었다.`);f.dot.t--;if(f.dot.t<=0)f.dot=null}
+  if(f.hp>0&&f.dot){const v=Math.max(1,Math.round(f.maxhp*f.dot.pct/100));f.hp=Math.max(0,f.hp-v);say(`${f.ch.name} 지속 피해 ${v}`,{side:f.side,v:'-'+v});f.dot.t--;if(f.dot.t<=0)f.dot=null}
   if(f.mT>0&&--f.mT<=0)f.m={atk:0,def:0};
   if(f.dT>0&&--f.dT<=0)f.d={atk:0,def:0};
   if(f.evade>0)f.evade--;
@@ -132,7 +149,7 @@ function doTurn(action){
  let order;
  if(action.type==='switch'){
   const old=P();run.active=action.to;
-  say(`${old.ch.name}, 돌아와! 가라, ${P().ch.name}!`);
+  say(`${old.ch.name}, 교대. ${P().ch.name}`);
   order=['e'];
  }else{
   const ps=st(P(),'spd'),es=st(E,'spd');
@@ -149,18 +166,21 @@ function doTurn(action){
  if(result!=='win'&&P().hp>0&&E.hp>0)endOfTurn(ev);
  if(E.hp<=0)result='win';
  else if(P().hp<=0){
-  say(`${josa(P().ch.name,'은/는')} 쓰러졌다!`);
+  say(`${josa(P().ch.name,'은/는')} 쓰러졌다.`);
   result=run.party.some(f=>f.hp>0)?'forced':'lose';
  }
- if(result==='win')say(`${josa(E.ch.name,'을/를')} 쓰러뜨렸다!`);
+ if(result==='win')say(`${josa(E.ch.name,'을/를')} 쓰러뜨렸다.`);
  return{ev,result}}
 
 function addExp(id,amt){const c=S.chars[id];if(c.lv>=CFG.LV_MAX)return;c.exp+=amt;
  while(c.lv<CFG.LV_MAX&&c.exp>=expNeed(c.lv)){c.exp-=expNeed(c.lv);c.lv++}
  if(c.lv>=CFG.LV_MAX)c.exp=0}
+function addSkExp(id,i,amt){const s=S.chars[id].sk[i];if(!s||s.lv>=CFG.SK_MAX)return;s.exp+=amt;
+ while(s.lv<CFG.SK_MAX&&s.exp>=skNeed(s.lv)){s.exp-=skNeed(s.lv);s.lv++}
+ if(s.lv>=CFG.SK_MAX)s.exp=0}
 
 function winBattle(){
- if(!run.party.some(f=>f.hp>0)){run.note='모두 쓰러지고 말았다.';loseRun();return}
+ if(!run.party.some(f=>f.hp>0)){run.note='';loseRun();return}
  const w=run.wave,boss=run.enemy.boss;
  const coin=12+3*w+(boss?80+2*w:0);
  S.coin+=coin;run.gained+=coin;run.won=w;
@@ -168,20 +188,20 @@ function winBattle(){
  run.party.forEach(f=>{if(f.hp>0)addExp(f.ch.id,xp)});
  if(S.best<w)S.best=w;
  save();
- run.note=`기운 ${coin} 획득.`;
+ run.note=`${TG} ${coin}`;
  run.phase='reward';run.cards=rewardCards()}
 
 function rewardCards(){
  const dmg=run.party.some(f=>f.hp>0&&f.hp<f.maxhp*.8),down=run.party.some(f=>f.hp<=0),w=run.wave;
  const pool=[
-  {k:'atk',t:'공격 강화',d:'공격 +8%'},
-  {k:'def',t:'방어 강화',d:'방어 +8%'},
-  {k:'spd',t:'신속',d:'속도 +8%'},
-  {k:'hp',t:'체력 강화',d:'최대 HP +10%'},
+  {k:'atk',t:'공격',d:'+8%'},
+  {k:'def',t:'방어',d:'+8%'},
+  {k:'spd',t:'속도',d:'+8%'},
+  {k:'hp',t:'체력',d:'최대 HP +10%'},
   {k:'exp',t:'수련',d:`경험치 +${20+w*6}`},
-  {k:'purse',t:'기운 주머니',d:`기운 +${60+w*4}`}];
- if(dmg)pool.push({k:'heal',t:'회복',d:'HP 40% 회복'},{k:'heal',t:'회복',d:'HP 40% 회복'});
- if(down)pool.push({k:'revive',t:'부활',d:'쓰러진 동료 HP 50%로 부활'},{k:'revive',t:'부활',d:'쓰러진 동료 HP 50%로 부활'});
+  {k:'purse',t:'재물',d:`${TG} ${60+w*4}`}];
+ if(dmg)pool.push({k:'heal',t:'회복',d:'HP 40%'},{k:'heal',t:'회복',d:'HP 40%'});
+ if(down)pool.push({k:'revive',t:'부활',d:'HP 50%'},{k:'revive',t:'부활',d:'HP 50%'});
  const out=[];while(out.length<3&&pool.length){const i=Math.floor(Math.random()*pool.length);const c=pool.splice(i,1)[0];if(!out.some(o=>o.k===c.k))out.push(c)}
  return out}
 
@@ -200,153 +220,190 @@ function pickReward(i){
 function loseRun(){run.phase='over';save()}
 
 /* =====================================================================
-   가챠
+   뽑기
    ===================================================================== */
-function pullOnce(){
- S.pity++;S.pulls++;
- const r=Math.random()*100;let star;
- if(S.pity>=CFG.PITY)star=Math.random()*13.5<1.5?6:5;
- else if(r<1.5)star=6;else if(r<13.5)star=5;else if(r<50)star=4;else star=0;
- if(star>=5)S.pity=0;
- if(!star){const x=Math.random()*100;const k=x<65?'s':x<93?'m':'l';S.mats[k]++;return{kind:'mat',k}}
+const RATE={6:.6,5:4,4:25.4};
+function rollStar(){const r=Math.random()*100;return r<RATE[6]?6:r<RATE[6]+RATE[5]?5:r<RATE[6]+RATE[5]+RATE[4]?4:0}
+function rollHigh(){const t=RATE[6]+RATE[5]+RATE[4],r=Math.random()*t;return r<RATE[6]?6:r<RATE[6]+RATE[5]?5:4}
+const MATW=[['ls',24],['ss',24],['lm',9],['sm',9],['ll',2.5],['sl',2.5]];
+function rollMat(){const t=MATW.reduce((a,b)=>a+b[1],0);let r=Math.random()*t;for(const[k,w]of MATW){if((r-=w)<0)return k}return'ls'}
+function resolveStar(star){
+ if(!star){const k=rollMat();S.mats[k]++;return{kind:'mat',k}}
  const ch=rnd(CH.filter(c=>c.star===star));
+ if(!S.chars[ch.id]){S.chars[ch.id]=newChar();ensureChar(ch.id);return{kind:'char',ch,tag:'NEW'}}
  const o=S.chars[ch.id];
- if(!o){S.chars[ch.id]={lv:1,exp:0,bt:0};return{kind:'char',ch,tag:'신규'}}
- if(o.bt<5){o.bt++;return{kind:'char',ch,tag:'돌파'}}
- S.mats.l++;return{kind:'char',ch,tag:'수련서'}}
+ if(o.bt<CFG.BT_MAX){o.bt++;return{kind:'char',ch,tag:`돌파 ${o.bt}`}}
+ const v=CFG.AP_DUP[ch.star]||1;S.ap+=v;return{kind:'char',ch,tag:`살구 ${v}`}}
+function pullMany(n){
+ const sts=[];for(let i=0;i<n;i++)sts.push(rollStar());
+ if(n>=10&&!sts.some(s=>s>=4))sts[sts.length-1]=rollHigh();
+ return sts.map(resolveStar)}
+
+let ovr='';
+function toGacha(){
+ show(`<div class="bg dark"></div>${wallet()}
+ <div class="cast"><h2>CAST</h2>
+  <button class="tb" onclick="pull(1)">${TG} ${CFG.PULL_COST}</button>
+  <button class="tb" onclick="pull(10)">${TG} ${CFG.PULL10_COST}</button>
+  <hr>
+  <div class="row" style="align-items:center;gap:.6em;justify-content:center">${AP} ${CFG.AP_PER_COIN} <span class="sub">→</span> ${TG} 1
+   <button class="mini" ${S.ap>=CFG.AP_PER_COIN?'':'disabled'} onclick="exch(1)">1</button>
+   <button class="mini" ${S.ap>=CFG.AP_PER_COIN?'':'disabled'} onclick="exch(0)">MAX</button></div>
+ </div>
+ <div class="back"><button class="tb" onclick="toTitle()">BACK</button></div><div id="ovl"></div>`)}
+function exch(one){const n=one?1:Math.floor(S.ap/CFG.AP_PER_COIN);if(n<=0||S.ap<n*CFG.AP_PER_COIN)return;
+ S.ap-=n*CFG.AP_PER_COIN;S.coin+=n;save();toGacha()}
+function pull(n){
+ const cost=n===10?CFG.PULL10_COST:CFG.PULL_COST;
+ if(S.coin<cost){flashWallet();return}
+ S.coin-=cost;const res=pullMany(n);save();
+ const cells=res.map(r=>r.kind==='mat'
+  ?`<div class="rc"><div class="tile" style="--c:#c4c9d4"><b>書</b></div>${BOOK[r.k].n}</div>`
+  :`<div class="rc r${r.ch.star}"><div class="tile" style="--c:${EC[r.ch.el]}"><b>${r.ch.name[0]}</b>${imgTag(r.ch)}</div>${r.ch.name}<small>${r.tag}</small></div>`).join('');
+ toGacha();
+ $('ovl').innerHTML=`<div class="ov" onclick="toGacha()"><div class="res" style="${n===1?'grid-template-columns:4.2em':''}">${cells}</div></div>`}
+function flashWallet(){const w=document.querySelector('.wallet');if(!w)return;w.style.color='var(--acc)';setTimeout(()=>{w.style.color=''},500)}
 
 /* =====================================================================
-   화면
+   화면 공통
    ===================================================================== */
-let party=[],cur='luihu';
+let party=[],cur='luihu',mode='start';
 function show(h){$('screen').innerHTML=h}
-const coinBox=()=>`<div class="win coin">기운 ${S.coin.toLocaleString()}</div>`;
+function tileHtml(c,o,extra,attrs){
+ return `<div class="tile ${extra||''}" style="--c:${EC[c.el]}" ${attrs||''}><b>${c.name[0]}</b>${imgTag(c)}</div>`}
 
 function toTitle(){
  run=null;busy=false;skipFn=null;
- show(`<div class="bg star"></div>${coinBox()}${S.best?`<div class="win best">최고 ${S.best}</div>`:''}
- <div class="logo"><div class="h">神世界</div><div class="s">KAMISEKAI</div></div>
- <div class="win menu"><button class="opt" onclick="toPrep()">출정</button><button class="opt" onclick="toGacha()">뽑기</button><button class="opt" onclick="resetAsk()">초기화</button></div>`)}
-function resetAsk(){if(confirm('저장 데이터를 초기화합니다.')){try{localStorage.removeItem(KEY)}catch(e){}S=freshSave();save();toTitle()}}
+ show(`<div class="bg mist"></div>
+ <img class="logo" src="img/logo.png" alt="神世界">
+ <div class="menu">
+  <button class="tb" onclick="toPrep()">START</button>
+  <button class="tb" onclick="toGacha()">CAST</button>
+  <button class="tb" onclick="toArc()">ARCHIVES</button>
+  <button class="tb" onclick="toSet()">SETTING</button>
+ </div>`)}
 
-/* ---- 출정 준비 ---- */
+/* ---- SETTING ---- */
+function toSet(){
+ show(`<div class="bg mist"></div>
+ <div class="menu" style="top:40%"><button class="tb" onclick="resetAsk()">저장 데이터 초기화</button></div>
+ <div class="back"><button class="tb" onclick="toTitle()">BACK</button></div>`)}
+function resetAsk(){if(confirm('저장 데이터를 모두 지웁니다.')){try{localStorage.removeItem(KEY)}catch(e){}S=freshSave();save();toTitle()}}
+
+/* ---- 상세 패널 ---- */
+function detHtml(id,train){
+ const c=CHM[id],o=S.chars[id];
+ const head=(o)=>`<div class="dh">${tileHtml(c)}<div><div class="nm">${c.name}</div><div class="sub">${c.race} · ${c.el} · <span class="star">${stars(c.star)}</span></div>${o?`<div class="sub">Lv.${o.lv} · 돌파 ${o.bt}/${CFG.BT_MAX}</div>`:''}</div></div>`;
+ if(!o){
+  const price=CFG.AP_CHAR[c.star];
+  return head(null)+c.sk.map((k,i)=>`<div class="sk"><b>${'①②③'[i]} ${k.n}</b><span>${fx(k,1)}</span></div>`).join('')
+   +(train&&price?`<div class="row"><button class="mini" ${S.ap>=price?'':'disabled'} onclick="buyChar('${id}')">${AP} ${price}</button></div>`:'')}
+ const s=calcStats(c,o.lv,o.bt),need=expNeed(o.lv),pct=o.lv>=CFG.LV_MAX?100:Math.round(o.exp/need*100);
+ let h=head(o)+`<div class="xpb"><i style="width:${pct}%"></i></div>
+ <div class="st"><span>HP<b>${s.hp}</b></span><span>공격<b>${s.atk}</b></span><span>방어<b>${s.def}</b></span><span>속도<b>${s.spd}</b></span></div>`;
+ if(train)h+=`<div class="row">${['ls','lm','ll'].map(k=>`<button class="mini" ${S.mats[k]>0&&o.lv<CFG.LV_MAX?'':'disabled'} onclick="useBook('${id}','${k}')">수련 ${SZ[k[1]]} ${S.mats[k]}</button>`).join('')}</div>`;
+ h+=c.sk.map((k,i)=>{const sl=o.sk[i]||{lv:1,exp:0};
+  const bt=train?`<div class="bt">${['ss','sm','sl'].map(b=>`<button class="mini" ${S.mats[b]>0&&sl.lv<CFG.SK_MAX?'':'disabled'} onclick="useSk('${id}',${i},'${b}')">${SZ[b[1]]}</button>`).join('')}</div>`:'';
+  return `<div class="sk"><b>${'①②③'[i]} ${k.n}<i>Lv.${sl.lv}</i></b>${bt}<span>${fx(k,sl.lv)}</span></div>`}).join('');
+ return h}
+
+/* ---- START ---- */
 function toPrep(){
+ mode='start';
  party=S.party.filter(id=>S.chars[id]).slice(0,CFG.PARTY_MAX);
  if(!party.length)party=['luihu'];
  cur=party[0];drawPrep()}
 function drawPrep(){
  const gs=$('pgrid')?$('pgrid').scrollTop:0;
- const icons=CH.map(c=>{const o=S.chars[c.id],i=party.indexOf(c.id);
-  return `<div class="ico ${o?'':'lk'} ${i>=0?'in':''}" style="--c:${EC[c.el]}" onmouseenter="hov('${c.id}')" onclick="pick('${c.id}')"><b>${c.name[0]}</b>${imgTag(c)}${i>=0?`<em>${i+1}</em>`:''}</div>`}).join('');
+ const tiles=CH.map(c=>{const o=S.chars[c.id],i=party.indexOf(c.id);
+  return `<div class="tile ${o?'':'lk'} ${i>=0?'in':''} ${cur===c.id?'sel':''}" style="--c:${EC[c.el]}" onmouseenter="hov('${c.id}')" onclick="pick('${c.id}')"><b>${c.name[0]}</b>${imgTag(c)}${i>=0?`<em>${i+1}</em>`:''}</div>`}).join('');
  const slots=[0,1,2].map(i=>{const c=party[i]&&CHM[party[i]];
-  return `<div class="slot" onclick="drop(${i})">${c?`${ico(c)}<span>${c.name}</span>`:''}</div>`}).join('');
- show(`<div class="bg dark"></div><div class="win pgrid" id="pgrid">${icons}</div><div class="win pdet" id="pdet"></div>
- <div class="win pparty">${slots}<div class="sp"></div><button class="opt" ${party.length?'':'disabled'} onclick="start()">출정</button><button class="opt" onclick="toTitle()">뒤로</button></div>`);
- $('pgrid').scrollTop=gs;drawDet()}
-function hov(id){cur=id;drawDet()}
+  return `<div class="slot" onclick="drop(${i})">${c?`${tileHtml(c)}<span>${c.name}</span>`:''}</div>`}).join('');
+ show(`<div class="bg dark"></div><div class="tiles" id="pgrid">${tiles}</div><div class="det" id="pdet"></div>
+ <div class="bar">${slots}<div class="sp"></div><button class="tb" ${party.length?'':'disabled'} onclick="start()">START</button><button class="tb" onclick="toTitle()">BACK</button></div>`);
+ $('pgrid').scrollTop=gs;$('pdet').innerHTML=detHtml(cur,false)}
+function hov(id){cur=id;const d=$('pdet');if(d)d.innerHTML=detHtml(id,false);document.querySelectorAll('#pgrid .tile').forEach((t,i)=>t.classList.toggle('sel',CH[i].id===id))}
 function pick(id){cur=id;
  if(S.chars[id]){const i=party.indexOf(id);if(i>=0)party.splice(i,1);else if(party.length<CFG.PARTY_MAX)party.push(id)}
  drawPrep()}
 function drop(i){party.splice(i,1);drawPrep()}
-function drawDet(){
- const el=$('pdet');if(!el)return;
- const c=CHM[cur],o=S.chars[cur];
- if(!o){el.innerHTML=`<div class="dh"><div class="ico lk" style="--c:${EC[c.el]}"><b>?</b></div><div><div class="nm">???</div><div class="sub star">${stars(c.star)}</div></div></div>`;return}
- const s=calcStats(c,o.lv,o.bt),need=expNeed(o.lv),pct=o.lv>=CFG.LV_MAX?100:Math.round(o.exp/need*100);
- el.innerHTML=`<div class="dh">${ico(c)}<div><div class="nm">${c.name}</div><div class="sub">${c.race} ${elChip(c.el)} <span class="star">${stars(c.star)}</span></div><div class="sub">Lv.${o.lv} · 돌파 ${o.bt}</div></div></div>
- <div class="xp"><i style="width:${pct}%"></i></div>
- <div class="st"><span>HP<b>${s.hp}</b></span><span>공격<b>${s.atk}</b></span><span>방어<b>${s.def}</b></span><span>속도<b>${s.spd}</b></span></div>
- ${c.sk.map((k,i)=>`<div class="sk"><b>${'①②③'[i]} ${k.n}</b><span>${fx(k)}</span></div>`).join('')}
- <div class="tr">${['s','m','l'].map(k=>`<button class="opt sm" ${S.mats[k]>0&&o.lv<CFG.LV_MAX?'':'disabled'} onclick="useMat('${c.id}','${k}')">수련서 ${MATS[k].n} ×${S.mats[k]}</button>`).join('')}</div>`}
-function useMat(id,k){if(S.mats[k]<=0)return;S.mats[k]--;addExp(id,MATS[k].x);save();drawDet()}
 function start(){S.party=party.slice();save();startRun(party.slice())}
 
-/* ---- 뽑기 ---- */
-function toGacha(){
- show(`<div class="bg dark"></div>${coinBox()}
- <div class="win gbox"><div class="gt">수집</div><div class="gp">${S.pity} / ${CFG.PITY}</div>
-  <button class="opt" onclick="pull(1)">1회 · ${CFG.PULL_COST}</button>
-  <button class="opt" onclick="pull(10)">10회 · ${CFG.PULL10_COST}</button></div>
- <div class="win back"><button class="opt" onclick="toTitle()">뒤로</button></div><div id="ovl"></div>`)}
-function pull(n){
- const cost=n===10?CFG.PULL10_COST:CFG.PULL_COST;
- if(S.coin<cost){alert('기운이 부족합니다.');return}
- S.coin-=cost;const res=[];for(let i=0;i<n;i++)res.push(pullOnce());save();
- const cells=res.map(r=>r.kind==='mat'
-  ?`<div class="rc"><div class="ico lk" style="--c:#c8ccd8"><b>書</b></div>수련서 ${MATS[r.k].n}</div>`
-  :`<div class="rc r${r.ch.star}">${ico(r.ch)}${r.ch.name}<small>${r.tag}</small></div>`).join('');
- toGacha();
- $('ovl').innerHTML=`<div class="res" onclick="toGacha()"><div class="win rbox">${cells}</div></div>`}
+/* ---- ARCHIVES ---- */
+function toArc(){mode='arc';cur=S.chars[cur]?cur:'luihu';drawArc()}
+function drawArc(){
+ const gs=$('pgrid')?$('pgrid').scrollTop:0,ds=$('pdet')?$('pdet').scrollTop:0;
+ const tiles=CH.map(c=>{const o=S.chars[c.id];
+  return `<div class="tile ${o?'':'lk'} ${cur===c.id?'sel':''}" style="--c:${EC[c.el]}" onclick="arcPick('${c.id}')"><b>${c.name[0]}</b>${imgTag(c)}${o?`<em>${o.lv}</em>`:''}</div>`}).join('');
+ const m=S.mats,mats=`<div class="mats"><span>${['ls','lm','ll'].map(k=>`${SZ[k[1]]}<b>${m[k]}</b>`).join(' ')}<br>수련의 서</span><span>${['ss','sm','sl'].map(k=>`${SZ[k[1]]}<b>${m[k]}</b>`).join(' ')}<br>오덕의 서</span></div>`;
+ show(`<div class="bg dark"></div>${wallet()}<div class="tiles" id="pgrid" style="top:9%;bottom:21%">${tiles}</div><div class="det" id="pdet" style="top:9%">${detHtml(cur,true)}</div>
+ <div class="bar">${mats}<div class="sp"></div><button class="tb" onclick="toTitle()">BACK</button></div>`);
+ $('pgrid').scrollTop=gs;$('pdet').scrollTop=ds}
+function arcPick(id){cur=id;drawArc()}
+function useBook(id,k){if(S.mats[k]<=0)return;S.mats[k]--;addExp(id,BOOK[k].x);save();drawArc()}
+function useSk(id,i,k){if(S.mats[k]<=0)return;S.mats[k]--;addSkExp(id,i,BOOK[k].x);save();drawArc()}
+function buyChar(id){const c=CHM[id],p=CFG.AP_CHAR[c.star];if(!p||S.chars[id]||S.ap<p)return;
+ S.ap-=p;S.chars[id]=newChar();ensureChar(id);save();drawArc()}
 
-/* ---- 전투 화면 ---- */
-function bgStyle(m){return `background-image:linear-gradient(170deg,${m.g[0]},${m.g[1]})`}
-function infoHtml(n,lv,el,hp,max,me,id){
- const r=Math.max(0,hp/max);let xp='';
- if(me){const o=S.chars[id];const need=expNeed(o.lv);xp=`<div class="xp"><i style="width:${o.lv>=CFG.LV_MAX?100:Math.round(o.exp/need*100)}%"></i></div>`}
- return `<div class="r1"><span>${n}</span><span>Lv.${lv}</span></div><div class="r2">${elChip(el)}<span class="hl">HP</span><div class="hpb"><i style="width:${r*100}%;background:${hpColor(r)}"></i></div></div>${me?`<div class="nums">${hp} / ${max}</div>${xp}`:''}`}
-
+/* =====================================================================
+   전투 화면
+   ===================================================================== */
 function drawBattle(){
- const m=mapOf(run.wave),E=run.enemy,s=snap();
- show(`<div class="bg" id="bgm" style="${bgStyle(m)}"></div><div class="gnd"></div>
- <div class="win where">${m.name} · ${run.wave}</div>
- <div class="plat" id="ePlat"></div><div class="plat" id="pPlat"></div>
- <div class="spr" id="eSpr" style="--c:${EC[E.ch.el]}"><b>${E.ch.name[0]}</b>${imgTag(E.ch)}</div>
- <div class="spr" id="pSpr"></div>
- <div class="win info" id="eInfo"></div><div class="win info" id="pInfo"></div>
- <div class="win" id="msg"></div><div class="win" id="cmd"></div><div id="ovl"></div>`);
- lastHp={e:s.e.hp,p:s.p.hp,id:s.p.id};
+ const m=mapOf(run.wave),E=run.enemy,P=run.party[run.active];
+ show(`<div class="bg" id="bgm" style="background-image:linear-gradient(170deg,${m.g[0]},${m.g[1]})"></div><div class="veil"></div>
+ <div class="where">${m.name} · ${run.wave}</div><div class="gline"></div>
+ <div class="cb" id="eC"><div class="pop" id="ePop"></div><div class="pf" id="ePF" style="--c:${EC[E.ch.el]}"><b>${E.ch.name[0]}</b>${imgTag(E.ch)}</div>
+  <div class="who"><span>${E.ch.name}</span><span>Lv.${E.lv}</span></div><div class="hpl"><i id="eBar"></i></div><div class="hn" id="eHn"></div></div>
+ <div class="cb" id="pC"><div class="pop" id="pPop"></div><div class="pf" id="pPF"></div>
+  <div class="who"><span id="pNm"></span><span id="pLv"></span></div><div class="hpl"><i id="pBar"></i></div><div class="hn" id="pHn"></div></div>
+ <div id="cap"></div><div id="cards"></div><div id="sideL" class="side l"></div><div id="sideR" class="side r"></div><div id="ovl"></div>`);
+ const s=snap();lastHp={e:s.e.hp,p:s.p.hp,id:s.p.id};
+ $('pPF').dataset.id='';
  paintInfo(s,false);paintMenu();
  const img=new Image();img.onload=()=>{const b=$('bgm');if(b)b.style.backgroundImage=`url(maps/${m.id}.png)`};img.src=`maps/${m.id}.png`}
 
 function flash(id){const el=$(id);if(!el)return;el.classList.remove('hit');void el.offsetWidth;el.classList.add('hit')}
-function paintInfo(s,fl){
- const E=run.enemy;
- $('eInfo').innerHTML=infoHtml(E.ch.name+(E.boss?' ★':''),E.lv,E.ch.el,s.e.hp,s.e.max,false);
- $('pInfo').innerHTML=infoHtml(s.p.name,s.p.lv,s.p.el,s.p.hp,s.p.max,true,s.p.id);
- const ps=$('pSpr');
+function pop(side,v,heal){const el=$(side+'Pop');if(!el)return;el.textContent=v;el.className='pop'+(heal?' heal':'');void el.offsetWidth;el.classList.add('go')}
+function paintInfo(s,fl,popv){
+ const er=Math.max(0,s.e.hp/s.e.max),pr=Math.max(0,s.p.hp/s.p.max);
+ $('eBar').style.width=er*100+'%';$('eBar').style.background=hpColor(er);
+ $('pBar').style.width=pr*100+'%';$('pBar').style.background=hpColor(pr);
+ $('eHn').textContent=`${s.e.hp} / ${s.e.max}`;$('pHn').textContent=`${s.p.hp} / ${s.p.max}`;
+ $('pNm').textContent=s.p.name;$('pLv').textContent='Lv.'+s.p.lv;
+ const ps=$('pPF');
  if(ps.dataset.id!==s.p.id){const c=CHM[s.p.id];ps.dataset.id=s.p.id;ps.style.setProperty('--c',EC[c.el]);ps.innerHTML=`<b>${c.name[0]}</b>${imgTag(c)}`}
- if(fl){if(lastHp.e>s.e.hp)flash('eSpr');if(lastHp.id===s.p.id&&lastHp.p>s.p.hp)flash('pSpr')}
- $('eSpr').classList.toggle('ko',s.e.hp<=0);ps.classList.toggle('ko',s.p.hp<=0);
+ if(fl){if(lastHp.e>s.e.hp)flash('ePF');if(lastHp.id===s.p.id&&lastHp.p>s.p.hp)flash('pPF');if(popv)pop(popv.side==='e'?'e':'p',popv.v,popv.heal)}
+ $('ePF').classList.toggle('ko',s.e.hp<=0);ps.classList.toggle('ko',s.p.hp<=0);
  lastHp={e:s.e.hp,p:s.p.hp,id:s.p.id}}
 
-function setMsg(t,full,extra){const m=$('msg');if(!m)return;m.innerHTML=`<div class="mt">${t}</div>${extra||''}`;m.classList.toggle('full',!!full)}
+function setCap(t){const c=$('cap');if(c)c.innerHTML=t}
 function paintMenu(){
- const P=run.party[run.active],c=$('cmd'),ph=run.phase;
- $('ovl').innerHTML='';
- c.style.display='none';
- if(ph==='menu'&&run.sub==='cmd'){
-  setMsg(run.note||`${josa(P.ch.name,'은/는')} 무엇을 할까?`);
-  c.style.display='';
-  c.innerHTML=`<div class="cg"><button class="opt" onclick="sub('fight')">전투</button><button class="opt" onclick="openParty(false)">교체</button><button class="opt" onclick="quitRun()">도망</button><span></span></div>`}
- else if(ph==='menu'&&run.sub==='fight'){
-  const opts=[{s:BASIC,i:-1}].concat(P.ch.sk.map((s,i)=>({s,i})));
-  c.style.display='';
-  c.innerHTML=`<div class="cg">${opts.map(({s,i})=>`<button class="opt sm" ${i>=0&&P.pp[i]<=0?'disabled':''} onmouseenter="skInfo(${i})" onclick="act(${i})">${s.n}</button>`).join('')}</div>`;
-  skInfo(-1)}
- else if(ph==='play'){}
- else if(ph==='forced'){setMsg('다음 동료를 선택하세요.',true);openParty(true)}
+ const P=run.party[run.active],ph=run.phase,cards=$('cards');
+ $('ovl').innerHTML='';cards.innerHTML='';$('sideL').innerHTML='';$('sideR').innerHTML='';
+ if(ph==='menu'){
+  setCap(run.note||'');
+  const opts=[];if(!(P.ch.sk[0]&&P.ch.sk[0].t==='a'))opts.push(-1);P.ch.sk.forEach((s,i)=>opts.push(i));
+  cards.innerHTML=opts.map(i=>{const s=i<0?BASIC:P.ch.sk[i],l=slv(P,i);
+   return `<button class="sc" ${i>=0&&P.pp[i]<=0?'disabled':''} onclick="act(${i})"><em>${i<0?'·':'①②③'[i]}</em><b>${s.n}</b><span>${i<0?'위력 '+BASIC.p:fx(s,l)}</span><small>${i<0||P.pp[i]===Infinity?'∞':P.pp[i]+'/'+s.pp}</small></button>`}).join('');
+  $('sideL').innerHTML=`<button class="tb" onclick="openParty(false)">교체</button>`;
+  $('sideR').innerHTML=`<button class="tb" onclick="quitRun()">철수</button>`}
+ else if(ph==='forced'){setCap('');openParty(true)}
  else if(ph==='reward'){
-  setMsg(run.note,true);
-  $('ovl').innerHTML=`<div class="cards">${run.cards.map((k,i)=>`<button class="win card" onclick="pickReward(${i})"><b>${k.t}</b><span>${k.d}</span></button>`).join('')}</div>`}
+  setCap(run.note);
+  $('ovl').innerHTML=`<div class="ov" style="gap:2%">${run.cards.map((k,i)=>`<button class="rw" onclick="pickReward(${i})"><b>${k.t}</b><span>${k.d}</span></button>`).join('')}</div>`}
  else if(ph==='over'){
-  setMsg(`${run.note?run.note+' ':''}${run.won}단계 클리어 · 기운 ${run.gained} 획득`);
-  c.style.display='';
-  c.innerHTML=`<div class="cg one"><button class="opt" onclick="toTitle()">확인</button></div>`}}
-
-function sub(x){run.sub=x;paintMenu()}
-function skInfo(i){
- const P=run.party[run.active];const s=i<0?BASIC:P.ch.sk[i];
- setMsg(`<div>${s.n}<small>${i<0?'위력 40':fx(s)+' · PP '+P.pp[i]+'/'+s.pp}</small></div>`,false,`<span class="bk" onclick="sub('cmd')">◀ 뒤로</span>`)}
+  setCap('');
+  $('ovl').innerHTML=`<div class="ov" style="flex-direction:column;gap:1em"><div style="font-size:2.4em;font-weight:200;letter-spacing:.2em">${run.won}</div><div>${TG} ${run.gained}</div><button class="tb" style="margin-top:1em" onclick="toTitle()">OK</button></div>`}}
 
 function openParty(forced){
- $('ovl').innerHTML=`<div class="win plist">${run.party.map((f,i)=>{
-  const dead=f.hp<=0,isCur=i===run.active&&!forced,r=f.hp/f.maxhp;
-  return `<button class="prow" ${dead||isCur?'disabled':''} onclick="pickMember(${i})">${ico(f.ch)}<span class="pn">${f.ch.name}</span><span>Lv.${f.lv}</span><div class="hpb"><i style="width:${r*100}%;background:${hpColor(r)}"></i></div><span class="pv">${f.hp}/${f.maxhp}</span></button>`}).join('')}
-  ${forced?'':'<button class="opt" onclick="document.getElementById(\'ovl\').innerHTML=\'\'">뒤로</button>'}</div>`}
+ $('ovl').innerHTML=`<div class="ov"><div class="plist">${run.party.map((f,i)=>{
+  const dead=f.hp<=0,isCur=i===run.active&&!forced,r=Math.max(0,f.hp/f.maxhp);
+  return `<button class="prow" ${dead||isCur?'disabled':''} onclick="pickMember(${i})">${tileHtml(f.ch)}<span class="pn">${f.ch.name}</span><span>Lv.${f.lv}</span><div class="hb"><i style="width:${r*100}%;background:${hpColor(r)}"></i></div><span class="pv">${f.hp}/${f.maxhp}</span></button>`}).join('')}
+  ${forced?'':'<div style="text-align:center;margin-top:1em"><button class="tb" onclick="document.getElementById(\'ovl\').innerHTML=\'\'">BACK</button></div>'}</div></div>`}
 function pickMember(i){
  if(busy)return;
  if(run.phase==='forced'){
-  run.active=i;run.phase='menu';run.sub='cmd';run.note=`가라, ${run.party[i].ch.name}!`;
+  run.active=i;run.phase='menu';run.note='';
   paintInfo(snap(),false);paintMenu();return}
  $('ovl').innerHTML='';run.note='';runTurn({type:'switch',to:i})}
 
@@ -360,21 +417,21 @@ function runTurn(action){
  const r=doTurn(action);
  playEvents(r.ev,()=>{
   busy=false;skipFn=null;
-  if(r.result==='win'){winBattle();paintMenu()}
+  if(r.result==='win'){winBattle();paintInfo(snap(),false);paintMenu()}
   else if(r.result==='forced'){run.phase='forced';paintMenu()}
   else if(r.result==='lose'){loseRun();paintMenu()}
-  else{run.phase='menu';run.sub='cmd';paintMenu()}})}
+  else{run.phase='menu';paintMenu()}})}
 
 function playEvents(ev,done){
  let i=0,timer=null;
  const step=()=>{
   clearTimeout(timer);
   if(i>=ev.length){done();return}
-  const e=ev[i++];setMsg(e.t,true);paintInfo(e.s,true);
+  const e=ev[i++];setCap(e.t);paintInfo(e.s,true,e.pop);
   timer=setTimeout(step,700)};
  skipFn=step;step()}
 
-function quitRun(){if(busy)return;if(confirm('출정을 마칩니다.')){run.note='';run.phase='over';paintMenu()}}
+function quitRun(){if(busy)return;if(confirm('철수합니다.')){run.note='';run.phase='over';paintMenu()}}
 
 /* ---------- 시작 ---------- */
 load();toTitle();
