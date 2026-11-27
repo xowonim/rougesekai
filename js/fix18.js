@@ -21,10 +21,10 @@ const DLG={};
 
 (function(){const st=document.createElement('style');st.textContent=`
 #dlg{position:absolute;inset:0;z-index:90;cursor:pointer}
-#dlg .dbox{position:absolute;left:7%;right:7%;bottom:7%;padding:1.1em 1.4em 1.2em;background:rgba(8,9,12,.92);border:1px solid var(--line)}
+#dlg .dbox{position:absolute;left:0;right:0;bottom:0;height:30%;box-sizing:border-box;padding:1.4em 12% 1.6em;display:flex;flex-direction:column;justify-content:center;background:rgba(8,9,12,.97);border-top:1px solid var(--line)}
 #dlg .dn{font-size:.85em;font-weight:500;letter-spacing:.06em;margin-bottom:.55em}
 #dlg .dt{line-height:1.75;min-height:1.75em}
-#dlg .dh{position:absolute;right:1em;bottom:.8em;width:0;height:0;border-left:.35em solid transparent;border-right:.35em solid transparent;border-top:.5em solid var(--dim);animation:dlgb 1s infinite}
+#dlg .dh{position:absolute;right:7%;bottom:1.2em;width:0;height:0;border-left:.35em solid transparent;border-right:.35em solid transparent;border-top:.5em solid var(--dim);animation:dlgb 1s infinite}
 @keyframes dlgb{50%{opacity:.25}}
 `;document.head.appendChild(st)})();
 
@@ -54,11 +54,12 @@ loseRun=function(){const e=run&&run.enemy;_lr18();
 const _pm18=paintMenu;
 paintMenu=function(){_pm18();
  if(!run||!run.pend)return;
- const p=run.pend,D=DLG[p.id];
+ const p=run.pend,D=DLG[p.id],ov=document.getElementById('ovl');
+ const hold=steps=>{const h=ov?ov.innerHTML:'';if(ov)ov.innerHTML='';dlgShow(steps,()=>{const o=document.getElementById('ovl');if(o)o.innerHTML=h})};
  if(p.k==='win'&&run.phase==='reward'){run.pend=null;
-  dlgShow([{who:D.nm,col:DC[D.c],html:D.win},{html:`${dlgName(D.nm,D.wc)}${D.wp}의 전투에서 승리했다!`}])}
+  hold([{who:D.nm,col:DC[D.c],html:D.win},{html:`${dlgName(D.nm,D.wc)}${D.wp}의 전투에서 승리했다!`}])}
  else if(p.k==='lose'&&run.phase==='over'){run.pend=null;
-  dlgShow([{who:D.nm,col:DC[D.c],html:D.lose}])}};
+  hold([{who:D.nm,col:DC[D.c],html:D.lose}])}};
 
 /* 정: 뽑기와 CPU에서 제외, 아카이브에만 기록 */
 if(GODS.indexOf('jeong')>=0)GODS.splice(GODS.indexOf('jeong'),1);
