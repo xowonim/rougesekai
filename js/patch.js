@@ -1,8 +1,7 @@
 /* 3차 수정: 아이콘 · 프로필 · 돌파 탭 이름 */
 function bkSvg(k){const n={s:1,m:2,l:3}[k[1]]||1;let g='';
- if(k[0]==='l'){g=`<rect x="9" y="6.5" width="14" height="19" rx="1.6" fill="#14161c" stroke="#f0e2ae" stroke-width="1.1"/><text x="16" y="21" text-anchor="middle" font-size="13" fill="#f0e2ae" font-family="'Noto Serif CJK KR','Noto Serif KR','Noto Serif CJK JP',serif">修</text>`;
-  if(n>=2)g+=`<rect x="6" y="3.5" width="20" height="25" rx="2.2" fill="none" stroke="#f0e2ae" stroke-opacity=".55" stroke-width=".8"/>`;
-  if(n>=3)g+=`<rect x="4.2" y="1.8" width="23.6" height="28.4" rx="2.8" fill="none" stroke="#f0e2ae" stroke-opacity=".4" stroke-width=".6" stroke-dasharray="1.6 1.6"/>`}
+ if(k[0]==='l'){g=`<rect x="7.5" y="4.5" width="17" height="23" rx="1.6" fill="#14161c" stroke="#f0e2ae" stroke-width="1.1"/><line x1="11.5" y1="4.5" x2="11.5" y2="27.5" stroke="#f0e2ae" stroke-width="1"/>`;
+  for(let i=0;i<n;i++)g+=`<line x1="14.5" y1="${11+i*4.2}" x2="21.5" y2="${11+i*4.2}" stroke="#f0e2ae" stroke-width="1" stroke-linecap="round"/>`}
  else{g=`<circle cx="16" cy="16" r="10.5" fill="#14161c" stroke="#f0e2ae" stroke-width="1.1"/><text x="16" y="21.2" text-anchor="middle" font-size="14" fill="#f0e2ae" font-family="'Noto Serif CJK KR','Noto Serif KR','Noto Serif CJK JP',serif">氣</text>`;
   if(n>=2)g+=`<circle cx="16" cy="16" r="14" fill="none" stroke="#f0e2ae" stroke-opacity=".55" stroke-width=".8"/>`;
   if(n>=3)g+=ELK.map((e,i)=>{const a=(-90+72*i)*Math.PI/180;return `<circle cx="${(16+14*Math.cos(a)).toFixed(2)}" cy="${(16+14*Math.sin(a)).toFixed(2)}" r="1.7" style="fill:var(--${e})" stroke="#0c0d11" stroke-width=".5"/>`}).join('')}
@@ -115,14 +114,14 @@ Object.assign(SFX,{
  rare:()=>{[784,988,1175,1568].forEach((f,i)=>tone(f,.45,'sine',.05,0,.1+i*.1))}});
 
 /* 살구 아이콘 */
-const AP2='<path d="M50 20C72 18 90 36 89 58C88 80 70 93 50 92C30 93 12 80 11 58C10 36 28 18 50 20Z" fill="#f2a64a"/><path d="M62 30C80 36 88 54 82 72C76 84 66 90 56 91C74 78 78 52 62 30Z" fill="#e8784a" opacity=".55"/><path d="M50 24C45 44 45 68 50 90" stroke="#c9782c" stroke-width="3.5" fill="none" opacity=".7" stroke-linecap="round"/><path d="M50 22C50 14 52 9 56 5" stroke="#7a5230" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M54 14C60 3 76 3 84 10C78 22 62 24 54 14Z" fill="#7fc08a"/>';
+const AP2='<path d="M50 24C70 14 92 30 90 56C88 76 68 92 54 95C52 96 48 96 46 95C32 92 12 76 10 56C8 30 30 14 50 24Z" fill="#f5a58c"/><path d="M50 24C50 17 52 10 57 5" stroke="#7a5230" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M54 15C60 4 76 4 84 11C78 23 62 25 54 15Z" fill="#7fc08a"/>';
 function fixAP(root){(root||document).querySelectorAll('svg.ic:not([data-ap])').forEach(v=>{if(v.querySelector('path[d^="M50 22C50"]')){v.innerHTML=AP2;v.setAttribute('data-ap','1')}})}
 new MutationObserver(()=>fixAP()).observe(document.getElementById('game'),{childList:true,subtree:true});
 fixAP();
 
 /* CAST: 배너 + 뽑기 버튼, 살구 교환은 구석으로 */
 (function(){const st=document.createElement('style');st.textContent=`
-.banner{position:absolute;left:12%;right:12%;top:9%;bottom:28%;border:1px solid var(--line);background:rgba(255,255,255,.03);display:grid;place-items:center;overflow:hidden}
+.banner{position:absolute;left:24%;right:24%;top:10%;bottom:34%;border:1px solid var(--line);background:rgba(255,255,255,.03);display:grid;place-items:center;overflow:hidden}
 .banner span{letter-spacing:.6em;padding-left:.6em;font-weight:200;font-size:1.6em;color:var(--dim)}
 .banner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .pbtns{position:absolute;left:12%;right:12%;bottom:11%;display:flex;gap:2%}
