@@ -24,3 +24,6 @@ detHtml=function(id,train){let h=_det12(id,train);if(!train)return h;
  h=h.replace(/<div class="xpb">.*?<\/div>/s,'');
  const bar=o?`<div class="xpb"><i style="width:${o.lv>=CFG.LV_MAX?100:Math.round(o.exp/expNeed(o.lv)*100)}%"></i></div>`:'';
  return h.replace(tm[0],bar+tm[0])};
+
+/* 재료 이름 표기: 수련의 서 (소) */
+Object.keys(BOOK).forEach(k=>{BOOK[k].n=BOOK[k].n.replace(/ (소|중|대)$/,' ($1)')});
