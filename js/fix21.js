@@ -12,12 +12,14 @@ detHtml=function(id,train){const h=_det21(id,train);
  return top+(m?m[0]:'')};
 const _ta21=toArc;
 toArc=function(){if(!S.chars[cur])cur='ruihu';_ta21()};
-/* 탭 전환 시 전신·아이콘 테두리와 글자가 깜빡이지 않도록, 이미 불러온 이미지는 즉시 반영 */
-const IMGOK=new Set();
-document.addEventListener('load',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&t.getAttribute('src'))IMGOK.add(t.getAttribute('src'))},true);
-const _da21=drawArc;
-drawArc=function(){_da21();document.querySelectorAll('.tile,.afull').forEach(el=>{const im=el.querySelector('img');if(im&&IMGOK.has(im.getAttribute('src')))el.classList.add('hasimg')})};
-/* 초기 배포 캐릭터(루이후)는 항상 보유 */
-const _nm21=normalize;
-normalize=function(){_nm21();if(!S.chars.ruihu){S.chars.ruihu=newChar();ensureChar('ruihu');if(S.party.length<CFG.PARTY_MAX)S.party.unshift('ruihu')}};
-normalize();save();
+/* 이미지 영역: 이미지가 없다고 확인되기 전까지 글자·테두리는 숨김 (깜빡임 방지) */
+(function(){const st=document.createElement('style');
+ st.textContent='.tile:not(.noimg)>b,.afull:not(.noimg)>b,.pf:not(.noimg)>b{visibility:hidden}.afull:not(.noimg),.pf:not(.noimg){border-color:transparent;background:none}';
+ document.head.appendChild(st)})();
+const IMGBAD=new Set(),SEL='.tile,.afull,.pf';
+const markBad=el=>{const im=el.querySelector(':scope>img');if(im&&IMGBAD.has(im.getAttribute('src')))el.classList.add('noimg')};
+document.addEventListener('error',e=>{const t=e.target;if(t&&t.tagName==='IMG'&&t.getAttribute('src')){IMGBAD.add(t.getAttribute('src'));const p=t.parentElement;if(p&&p.matches(SEL))p.classList.add('noimg')}},true);
+new MutationObserver(ms=>{ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType!==1)return;if(n.matches(SEL))markBad(n);n.querySelectorAll(SEL).forEach(markBad)}))}).observe(document.body,{childList:true,subtree:true});
+const _pa21=poseApply;
+poseApply=function(sd){_pa21(sd);const el=document.getElementById(sd+'PF'),id=sideId(sd),m=id&&PMAP[id];if(el&&m)el.classList.toggle('noimg',m.base===null)};
+setInterval(()=>{if(typeof run!=='undefined'&&run&&document.getElementById('ePF'))poseRefresh()},250);
