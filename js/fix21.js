@@ -65,3 +65,8 @@ enhGo=function(){if(!ENH)return;const o=S.chars[cur],i=ENH.i,ch=ENH.kind==='char
  _eg21();const o2=S.chars[cur],l1=ch?o2.lv:o2.sk[i].lv;sfx(l1>l0?'lvup':'enh')};
 const _sr21=startRun;
 startRun=function(ids){sfx('start');_sr21(ids)};
+
+/* 보상 카드 아이콘이 잘리지 않도록 크기 조정 */
+(function(){const st=document.createElement('style');
+ st.textContent='.rw .ri{height:3.4em;overflow:visible}.rw .ri .sic{font-size:1em}.rw .ri .sic.bk{width:2.6em;height:2.6em;display:flex;align-items:center;justify-content:center}.rw .ri .sic.bk svg{width:100%;height:100%}';
+ document.head.appendChild(st)})();
