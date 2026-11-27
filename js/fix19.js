@@ -1,6 +1,6 @@
 /* 19차 수정: 전투 이미지 상태 (기본 · 피격 · 전투 불능 · 공격), gif 지원 */
 const PSUF={base:'',hit:'_hit',ko:'_ko',atk:'_atk'};
-const PMAP={};
+const PMAP={},HT_REF=220,HT_DEF=175;
 function poseLoad(id){
  if(!id||PMAP[id])return;const m=PMAP[id]={};
  Object.keys(PSUF).forEach(p=>{
@@ -21,7 +21,9 @@ function poseApply(sd){
  let im=el.querySelector('img');
  if(!u){if(im&&m.base===null&&PMAP[id]&&!/\/[^/]+\.png$/.test(im.getAttribute('src')||''))im.remove();return}
  if(!im){im=document.createElement('img');im.alt='';el.appendChild(im)}
- if(im.getAttribute('src')!==u)im.setAttribute('src',u)}
+ if(im.getAttribute('src')!==u)im.setAttribute('src',u);
+ const h=parseFloat((PROF[id]&&PROF[id].ht)||'')||HT_DEF;
+ im.style.transformOrigin='50% 100%';im.style.transform=`scale(${Math.min(1,h/HT_REF).toFixed(3)})`}
 function poseRefresh(){poseApply('e');poseApply('p')}
 function poseSet(sd,pose,ms){const s=PST[sd];s.pose=pose;s.t=Date.now()+ms;clearTimeout(s.tm);poseApply(sd);s.tm=setTimeout(()=>poseApply(sd),ms+20)}
 (function(){const st=document.createElement('style');st.textContent='.pf.ko.kp{opacity:1}';document.head.appendChild(st)})();
