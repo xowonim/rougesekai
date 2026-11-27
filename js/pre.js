@@ -13,4 +13,5 @@ CHM.ruihu=CHM.luihu;
   o.party=o.party.map(fix);
   for(const id of Object.keys(o.chars))if(!CHM[id]||ALIAS[id]){o.hold[id]=o.chars[id];if(o.party.includes(id))o.holdParty.push(id);delete o.chars[id]}
   for(const id of Object.keys(o.hold)){const nid=fix(id);if(CHM[nid]&&!ALIAS[nid]){if(!o.chars[nid])o.chars[nid]=o.hold[id];delete o.hold[id];if(o.holdParty.includes(id)&&!o.party.includes(nid))o.party.push(nid)}}
+  if(!o.rec1){o.rec1=1;if(!o.chars.ruihu&&!o.hold.ruihu){o.chars.ruihu={lv:1,exp:0,bt:0,sk:[]};if(o.party.length<3)o.party.unshift('ruihu')}}
   localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}})();
