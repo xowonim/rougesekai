@@ -2,8 +2,8 @@
 
 /* ---------- 스킬 데이터 ---------- */
 CHM.haekyung.sk=[
- A('우산','우산을 무기 삼아 휘둔다.',40,{acc:100}),
- H('요리','오토리도 인정한 미슔랭 손으로 HP나 MP를 회복한다.',35,{acc:80,rnd:1,kn:'타인 변화',mp:14}),
+ A('우산','우산을 무기 삼아 휘두른다.',40,{acc:100}),
+ H('요리','오토리도 인정한 미슐랭 손으로 HP나 MP를 회복한다.',35,{acc:80,rnd:1,kn:'타인 변화',mp:14}),
  W('기억','상대의 기억을 조작해 마지막으로 쓴 기술을 잊게 한다.',0,{acc:100,seal:1,kn:'타인 변화',mp:12})];
 CHM.hongryeon.sk=[
  H('재생','생명력을 불어넣어 상처를 아물게 한다.',40,{acc:100,kn:'타인 변화'}),
@@ -12,7 +12,7 @@ CHM.hongryeon.sk=[
 CHM.bif.sk=[
  A('수검','물로 빚은 검으로 벤다.',40,{acc:100}),
  A('잠수','물속으로 잠수했다가 튀어올라 공격한다.',80,{acc:100,dive:1,mp:16}),
- H('정화','깨끗한 물로 몸을 씨어 이상을 없앤다.',0,{acc:60,clean:1,kn:'자기 변화'})];
+ H('정화','깨끗한 물로 몸을 씻어 이상을 없앤다.',0,{acc:60,clean:1,kn:'자기 변화'})];
 
 /* ---------- 스킬 표시 ---------- */
 skFace=function(ch,i,s,lv,tag,mp){const c=mp?mpCost(s,i):0;
@@ -21,13 +21,15 @@ skFace=function(ch,i,s,lv,tag,mp){const c=mp?mpCost(s,i):0;
 
 /* ---------- 전투 상태 ---------- */
 const _resetBattleState=resetBattleState;
-resetBattleState=function(f){_resetBattleState(f);f.seal=null;f.sealAge=0;f.love=0;f.loveAge=0;f.dive=0;f.pend=null;f.last=null};
+resetBattleState=function(f){_resetBattleState(f);f.seal=null;f.sealAge=0;f.love=0;f.loveAge=0;f.dive=0;f.pend=null;f.last=null;f.psn=0;f.conf=0;f.confAge=0;f.stk=0;f.stkPerm=false};
 const _doTurn=doTurn;
 doTurn=function(action){if(action.type==='switch'){const o=run.party[run.active];o.dive=0;o.pend=null}return _doTurn(action)};
 
-const RELEASE=.2;
-function cleanse(f){const had=!!(f.dot||f.shock||f.stun>0||f.d.atk>0||f.d.def>0||f.seal!==null||f.love);
- f.dot=null;f.shock=false;f.shockT=0;f.stun=0;f.d={atk:0,def:0};f.dT=0;f.seal=null;f.love=0;return had}
+const RELEASE=.2,CONF_SELF=.7,CONF_RELEASE=.1;
+const FIELD_NM={clear:'청명',rain:'비',snow:'눈',thunder:'낙뢰',hot:'무더위',fog:'안개'};
+const FIELD_TXT={clear:'청명한 날씨가 되었다.',rain:'비가 내린다. 모두의 공격력이 10% 줄어든다.',snow:'눈이 내린다. 모두 턴마다 HP를 잃는다.',thunder:'먹구름이 낀다. 낙뢰가 떨어질 것 같다.',hot:'무더위가 찾아왔다. 모두의 공격력이 30% 늘어난다.',fog:'안개가 낀다. 아군의 회피율이 10% 오른다.'};
+function cleanse(f){const had=!!(f.dot||f.psn||f.conf||f.shock||f.stun>0||f.d.atk>0||f.d.def>0||f.seal!==null||f.love);
+ f.dot=null;f.psn=0;f.conf=0;f.confAge=0;f.shock=false;f.shockT=0;f.stun=0;f.d={atk:0,def:0};f.dT=0;f.seal=null;f.love=0;return had}
 
 perform=function(a,d,idx,ev){
  const say=(t,o)=>ev.push({t,s:snap(),...o});
@@ -49,21 +51,32 @@ perform=function(a,d,idx,ev){
  /* 공격이 아닌 기술의 명중 */
  if(sk.t!=='a'&&sk.t!=='z'&&sk.acc!==undefined&&Math.random()*100>=sk.acc){say('효과가 없었다.',{pop:tx(hostile?you:me,'실패'),sfx:'miss'});return}
  if(sk.t==='a'){
-  const acc=(sk.acc!==undefined?sk.acc:95)-(a.shock?50:0);
+  if(a.conf&&Math.random()<CONF_SELF){
+   const h=hitCalc(a,a,sk,k);a.hp=Math.max(0,a.hp-h.dmg);
+   say(`${josa(a.ch.name,'은/는')} 혼란에 빠져 자신을 공격했다. ${h.dmg} 피해`,{pop:{side:me,v:'-'+h.dmg,cls:''},fx:{side:me,k:'slash',c:EC[a.ch.el]},sfx:'hit'});return}
   if(d.evade>0){say(`${josa(d.ch.name,'은/는')} 공격을 피했다.`,{pop:tx(you,'회피'),fx:{side:you,k:'dodge'},sfx:'miss'});return}
-  if(Math.random()*100>=acc){say('빗나갔다.',{pop:tx(you,'MISS'),sfx:'miss'});return}
-  const h=hitCalc(a,d,sk,k);
-  if(a.love){h.dmg=0;h.crit=false}
-  d.hp=Math.max(0,d.hp-h.dmg);
-  const area=sk.sc==='범위';
-  if(h.dmg===0)say(`${josa(a.ch.name,'은/는')} 싸울 마음이 없다. 피해 0`,{pop:{side:you,v:'0',cls:''},fx:{side:you,k:'slash',c:EC[a.ch.el]},sfx:'hit'});
-  else say(`${d.ch.name}에게 ${h.dmg} 피해`+(h.crit?' · 치명타':''),{pop:{side:you,v:'-'+h.dmg,cls:h.crit?'crit':''},fx:{side:you,k:sk.shock?'zap':area?'ring':'slash',c:EC[a.ch.el],big:h.crit},sfx:h.crit?'crit':area?'boom':sk.shock?'zap':'slash',shake:h.crit||area||h.dmg>=d.maxhp*.25});
-  if(sk.drain&&a.hp>0&&h.dmg>0){const g=Math.round(h.dmg*.5);a.hp=Math.min(a.maxhp,a.hp+g);say(`${a.ch.name} HP ${g} 흡수`,{pop:{side:me,v:'+'+g,cls:'heal'},fx:{side:me,k:'heal'},sfx:'heal'})}
-  if(sk.recoil&&a.hp>0&&h.dmg>0){const r=Math.round(h.dmg*sk.recoil/100);a.hp=Math.max(0,a.hp-r);say(`${a.ch.name} 반동 ${r}`,{pop:{side:me,v:'-'+r,cls:'dot'},sfx:'hit'})}
-  if(d.hp>0&&sk.stun&&d.stun<=0&&(sk.stun>=100||!d.stunImm)&&Math.random()*100<sk.stun){d.stun=1;say(`${josa(d.ch.name,'은/는')} 기절했다.`,{pop:tx(you,'기절'),fx:{side:you,k:'stun'},sfx:'stun'})}
-  if(d.hp>0&&sk.shock&&!d.shock){d.shock=true;d.shockT=0;say(`${josa(d.ch.name,'은/는')} 감전되었다.`,{pop:tx(you,'감전'),sfx:'zap'})}
-  if(d.hp>0&&sk.dot){d.dot={pct:sk.dot,t:3};say(`${josa(d.ch.name,'은/는')} 지속 피해를 입는다.`,{pop:tx(you,'지속'),fx:{side:you,k:'down',c:'#8a6fb8'},sfx:'down'})}
-  if(sk.selfStun&&a.hp>0)a.rest=1;
+  const hits=sk.multi?sk.multi[0]+Math.floor(Math.random()*(sk.multi[1]-sk.multi[0]+1)):1;
+  const fog=!!(run&&run.field&&run.field.k==='fog'&&run.field.side===you);
+  const area=sk.sc==='범위';let landed=0;
+  for(let n=0;n<hits&&d.hp>0;n++){
+   const acc=(sk.acc!==undefined?sk.acc:95)-(a.shock?50:0)-(fog?10:0);
+   if(Math.random()*100>=acc){say('빗나갔다.',{pop:tx(you,'MISS'),sfx:'miss'});continue}
+   landed++;
+   const h=hitCalc(a,d,sk,k);
+   if(a.love){h.dmg=0;h.crit=false}
+   d.hp=Math.max(0,d.hp-h.dmg);
+   if(h.dmg===0)say(`${josa(a.ch.name,'은/는')} 싸울 마음이 없다. 피해 0`,{pop:{side:you,v:'0',cls:''},fx:{side:you,k:'slash',c:EC[a.ch.el]},sfx:'hit'});
+   else say(`${d.ch.name}에게 ${h.dmg} 피해`+(h.crit?' · 치명타':''),{pop:{side:you,v:'-'+h.dmg,cls:h.crit?'crit':''},fx:{side:you,k:sk.shock?'zap':area?'ring':'slash',c:EC[a.ch.el],big:h.crit},sfx:h.crit?'crit':area?'boom':sk.shock?'zap':'slash',shake:h.crit||area||h.dmg>=d.maxhp*.25});
+   if(sk.drain&&a.hp>0&&h.dmg>0){const g=Math.round(h.dmg*.5);a.hp=Math.min(a.maxhp,a.hp+g);say(`${a.ch.name} HP ${g} 흡수`,{pop:{side:me,v:'+'+g,cls:'heal'},fx:{side:me,k:'heal'},sfx:'heal'})}
+   if(sk.recoil&&a.hp>0&&h.dmg>0){const r=Math.round(h.dmg*sk.recoil/100);a.hp=Math.max(0,a.hp-r);say(`${a.ch.name} 반동 ${r}`,{pop:{side:me,v:'-'+r,cls:'dot'},sfx:'hit'})}
+  }
+  if(landed&&d.hp>0&&sk.stun&&d.stun<=0&&(sk.stun>=100||!d.stunImm)&&Math.random()*100<sk.stun){d.stun=1;say(`${josa(d.ch.name,'은/는')} 기절했다.`,{pop:tx(you,'기절'),fx:{side:you,k:'stun'},sfx:'stun'})}
+  if(landed&&d.hp>0&&sk.shock&&!d.shock){d.shock=true;d.shockT=0;say(`${josa(d.ch.name,'은/는')} 감전되었다.`,{pop:tx(you,'감전'),sfx:'zap'})}
+  if(landed&&d.hp>0&&sk.dot){d.dot={pct:sk.dot,t:3};say(`${josa(d.ch.name,'은/는')} 지속 피해를 입는다.`,{pop:tx(you,'지속'),fx:{side:you,k:'down',c:'#8a6fb8'},sfx:'down'})}
+  if(landed&&d.hp>0&&sk.psn&&!d.psn){d.psn=1;say(`${josa(d.ch.name,'은/는')} 중독되었다.`,{pop:tx(you,'중독'),fx:{side:you,k:'down',c:'#7fb06a'},sfx:'down'})}
+  if(landed&&d.hp>0&&sk.conf&&!d.conf&&Math.random()*100<sk.conf){d.conf=1;d.confAge=0;say(`${josa(d.ch.name,'은/는')} 혼란에 빠졌다.`,{pop:tx(you,'혼란'),fx:{side:you,k:'down',c:'#d8a85a'},sfx:'down'})}
+  if(landed&&d.hp>0&&sk.foeBoost){d.m.atk=Math.max(d.m.atk,sk.foeBoost/100);d.mT=2;say(`${d.ch.name} 공격 상승`,{pop:tx(you,'공격 UP'),fx:{side:you,k:'up',c:EC[a.ch.el]},sfx:'up'})}
+  if(sk.selfStun&&a.hp>0&&landed)a.rest=1;
  }else if(sk.t==='h'){
   if(sk.clean){
    const had=cleanse(a);
@@ -77,7 +90,16 @@ perform=function(a,d,idx,ev){
     if(!sk.kn){a.d={atk:0,def:0};a.dT=0;a.dot=null}
     say(`${a.ch.name} HP ${a.hp-before} 회복`,{pop:{side:me,v:'+'+(a.hp-before),cls:'heal'},fx:{side:me,k:'heal'},sfx:'heal'})}
   }
- }else if(sk.t==='b'){a.m.atk=Math.max(a.m.atk,sk.p*k/100);a.mT=3;say(`${a.ch.name} 공격 상승`,{pop:tx(me,'공격 UP'),fx:{side:me,k:'up',c:EC[a.ch.el]},sfx:'up'})}
+ }else if(sk.t==='b'){
+  if(sk.weather){
+   const W=['clear','rain','snow','thunder','hot','fog'],kk=W[Math.floor(Math.random()*W.length)];
+   run.field={k:kk,t:6,side:me,by:a.ch.name};
+   say(`${a.ch.name}의 날씨 조종. ${FIELD_TXT[kk]}`,{pop:tx(me,FIELD_NM[kk]),fx:{side:me,k:'up',c:'#9ad0f0'},sfx:'up'});return}
+  if(sk.stack){
+   a.stk=Math.min(sk.stack,(a.stk||0)+1);a.m.atk=sk.p*k*a.stk/100;
+   if(sk.perm)a.stkPerm=true;else a.mT=3;
+   say(`${a.ch.name} 공격 상승 (${a.stk}단계)`,{pop:tx(me,'공격 UP x'+a.stk),fx:{side:me,k:'up',c:EC[a.ch.el]},sfx:'up'});return}
+  a.m.atk=Math.max(a.m.atk,sk.p*k/100);a.mT=3;say(`${a.ch.name} 공격 상승`,{pop:tx(me,'공격 UP'),fx:{side:me,k:'up',c:EC[a.ch.el]},sfx:'up'})}
  else if(sk.t==='g'){a.m.def=Math.max(a.m.def,sk.p*k/100);a.mT=3;say(`${a.ch.name} 방어 상승`,{pop:tx(me,'방어 UP'),fx:{side:me,k:'up',c:'#6fa0dc'},sfx:'up'})}
  else if(sk.t==='w'){
   if(sk.seal){
@@ -112,7 +134,10 @@ aiPick=function(e,p){
  e.ch.sk.forEach((s,i)=>{
   if(e.mp<mpCost(s,i))return;
   if(e.seal===i)return;
-  if(s.t==='b'&&e.m.atk>0)return;
+  if(s.t==='b'){
+   if(s.weather){if(run.field)return}
+   else if(s.stack){if((e.stk||0)>=s.stack&&(s.perm||e.mT>1))return}
+   else if(e.m.atk>0)return}
   if(s.t==='g'&&e.m.def>0)return;
   if(s.t==='w'){
    if(s.seal){if(p.last===null||p.last===undefined||p.last<0||p.seal!==null)return}

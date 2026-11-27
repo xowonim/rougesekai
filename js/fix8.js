@@ -8,7 +8,7 @@ Object.assign(SVGP,{
  love:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
  dot:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',
  dive:'<path d="M2 9c3-3 5 3 8 0s5 3 8 0 3 0 4 0M2 15c3-3 5 3 8 0s5 3 8 0 3 0 4 0"/>'});
-const stIc=f=>[f.stun>0&&'stun',f.shock&&'shock',f.evade>0&&'evade',f.dive&&'dive',(f.seal!==null&&f.seal!==undefined)&&'seal',f.love&&'love',f.dot&&'dot',(f.d&&(f.d.atk>0||f.d.def>0))&&'debuff'].filter(Boolean).map(k=>`<span>${svg(k)}</span>`).join('');
+let stIc=f=>[f.stun>0&&'stun',f.shock&&'shock',f.evade>0&&'evade',f.dive&&'dive',(f.seal!==null&&f.seal!==undefined)&&'seal',f.love&&'love',f.dot&&'dot',(f.d&&(f.d.atk>0||f.d.def>0))&&'debuff'].filter(Boolean).map(k=>`<span>${svg(k)}</span>`).join('');
 
 (function(){const st=document.createElement('style');st.textContent=`
 .plist{display:flex;flex-direction:column;gap:.7em;left:20%;right:20%;top:6%;width:auto;max-height:none;overflow:visible}
