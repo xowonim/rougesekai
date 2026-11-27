@@ -5,7 +5,7 @@
    - 캐릭터 이미지 : chars/icon/<id>.png (작은 아이콘) · chars/full/<id>.png (아카이브 전신) · chars/battle/<id>.png (전투)
    - 스킬 아이콘 : img/skill/<id>_<1~3>.png / 재료 아이콘 : img/item/<ls|lm|ll|ss|sm|sl>.png
    ===================================================================== */
-const CFG={MAP_STAGES:10,PARTY_MAX:3,PULL_COST:160,PULL10_COST:1600,LV_MAX:50,SK_MAX:10,BT_MAX:6,START_COIN:480,REGEN:0.15,
+const CFG={MAP_STAGES:10,PARTY_MAX:3,PULL_COST:160,PULL10_COST:1600,LV_MAX:80,SK_MAX:8,BT_MAX:6,START_COIN:480,REGEN:0.15,
  AP_CHAR:{4:5,5:50},AP_PER_COIN:16,AP_DUP:{4:1,5:2,6:3},
  STUN_WAKE:.3,SHOCK_FREE:.3};
 
@@ -16,13 +16,12 @@ const B=(n,d,p,o={})=>({n,d,t:'b',p,...o});
 const G=(n,d,p,o={})=>({n,d,t:'g',p,...o});
 const W=(n,d,p,o={})=>({n,d,t:'w',p,...o});
 const Z=(n,d,o={})=>({n,d,t:'z',p:0,...o});
-function defPP(s){if(s.pp)return s.pp;if(s.t==='a')return s.p>=100?3:s.p>=85?4:s.p>=65?6:8;if(s.t==='z')return 3;return 4}
 
 /* ---------- 캐릭터 데이터 (캐릭터 설정 문서 기준) ---------- */
 const CH=[
 {id:'luihu',name:'송 루이후',el:'火',star:5,race:'인간?',role:'a',sk:[
  A('원자','',45,{acc:80}),
- A('폭발','',70,{acc:80,sc:'범위'}),
+ A('폭발','',70,{acc:80,sc:'범위',recoil:25}),
  A('피폭','',120,{acc:55,sc:'범위',stun:100})]},
 {id:'otori',name:'타마키 오토리',el:'？',star:5,race:'신',role:'m',sk:[
  A('불도깨비','주변의 불도깨비를 투척한다.',55),
@@ -225,7 +224,14 @@ const CH=[
 ];
 /* 캐릭터 설정 문구: LORE['캐릭터id']='설정 텍스트' */
 const LORE={};
-CH.forEach(c=>c.sk.forEach(s=>s.pp=defPP(s)));
+/* 캐릭터 프로필 (PROFILE 탭): 없는 항목은 기본값으로 표시 */
+const PROF={
+ luihu:{full:'송 루이후',rom:'Ruìhǔ Sòng / 宋瑞虎',aff:'오토리 일행',sex:'여성',age:'외관상 23세',ht:'172cm',race:'인간?',el:'火',abil:'원소를 다루는 능력',
+  intro:"과거 당나라에서 신분을 숨기며 활동한 해결사로, 불로불사에 관심을 가져 '규율'을 어기고 '오덕'을 다루는 존재가 되었다. 카리스마 있으며 머리보다는 몸이 먼저 나서는 타입. 정이 많고 타인을 잘 챙겨주지만, 쉽게 미련을 갖지 않는다."},
+ cheonryong:{full:'청천룡',rom:'Cheong Cheonryong / 靑天龍',aff:'이원향',sex:'남성',age:'1560세',ht:'177cm',race:'원향족',el:'木',abil:'—',
+  intro:"이원향에 살고 있는 청룡 가문의 마지막 후손. 그러나 모종의 이유로 오덕을 다룰 수 없어, 여의주를 무기화해 전투에 임한다. 세상력으로 500년 전, 이원향이 외부에 습격을 당했을 때 실종된 친형을 찾고 있다."}
+};
+
 const CHM={};CH.forEach(c=>CHM[c.id]=c);
 const BASIC={n:'저항',t:'a',p:30,d:''};
 
