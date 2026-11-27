@@ -70,3 +70,6 @@ startRun=function(ids){sfx('start');_sr21(ids)};
 (function(){const st=document.createElement('style');
  st.textContent='.rw .ri{height:3.4em;overflow:visible}.rw .ri .sic{font-size:1em}.rw .ri .sic.bk{width:2.6em;height:2.6em;display:flex;align-items:center;justify-content:center}.rw .ri .sic.bk svg{width:100%;height:100%}';
  document.head.appendChild(st)})();
+
+/* 살구 카드 등장 빈도 낮춤 */
+ITEMS.apr.w=1;
