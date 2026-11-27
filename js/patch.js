@@ -1,8 +1,8 @@
 /* 3차 수정: 아이콘 · 프로필 · 돌파 탭 이름 */
-const BKB2='<rect x="8" y="4" width="16" height="24" rx="1.2" fill="#14161c" stroke="#f0e2ae" stroke-width="1.1"/><path d="M11.2 4.6v22.8" stroke="#f0e2ae" stroke-opacity=".6" stroke-width=".8" stroke-dasharray="1.6 2"/><rect x="14.2" y="8" width="7" height="12" fill="none" stroke="#f0e2ae" stroke-opacity=".8" stroke-width=".8"/><text x="17.7" y="16.6" text-anchor="middle" font-size="6.6" fill="#f0e2ae" font-family="\'Noto Serif CJK KR\',\'Noto Serif KR\',\'Noto Serif CJK JP\',serif">修</text>';
 function bkSvg(k){const n={s:1,m:2,l:3}[k[1]]||1;let g='';
- if(k[0]==='l'){const T=n===1?[[0,0,0,1]]:n===2?[[-3.5,1.5,-9,.96],[3,0,4,.96]]:[[-6,2,-14,.9],[6,1,11,.9],[0,-1,0,.94]];
-  g=T.map(t=>`<g transform="translate(${t[0]} ${t[1]}) rotate(${t[2]} 16 16) translate(16 16) scale(${t[3]}) translate(-16 -16)">${BKB2}</g>`).join('')}
+ if(k[0]==='l'){g=`<rect x="9" y="6.5" width="14" height="19" rx="1.6" fill="#14161c" stroke="#f0e2ae" stroke-width="1.1"/><text x="16" y="21" text-anchor="middle" font-size="13" fill="#f0e2ae" font-family="'Noto Serif CJK KR','Noto Serif KR','Noto Serif CJK JP',serif">修</text>`;
+  if(n>=2)g+=`<rect x="6" y="3.5" width="20" height="25" rx="2.2" fill="none" stroke="#f0e2ae" stroke-opacity=".55" stroke-width=".8"/>`;
+  if(n>=3)g+=`<rect x="4.2" y="1.8" width="23.6" height="28.4" rx="2.8" fill="none" stroke="#f0e2ae" stroke-opacity=".4" stroke-width=".6" stroke-dasharray="1.6 1.6"/>`}
  else{g=`<circle cx="16" cy="16" r="10.5" fill="#14161c" stroke="#f0e2ae" stroke-width="1.1"/><text x="16" y="21.2" text-anchor="middle" font-size="14" fill="#f0e2ae" font-family="'Noto Serif CJK KR','Noto Serif KR','Noto Serif CJK JP',serif">氣</text>`;
   if(n>=2)g+=`<circle cx="16" cy="16" r="14" fill="none" stroke="#f0e2ae" stroke-opacity=".55" stroke-width=".8"/>`;
   if(n>=3)g+=ELK.map((e,i)=>{const a=(-90+72*i)*Math.PI/180;return `<circle cx="${(16+14*Math.cos(a)).toFixed(2)}" cy="${(16+14*Math.sin(a)).toFixed(2)}" r="1.7" style="fill:var(--${e})" stroke="#0c0d11" stroke-width=".5"/>`}).join('')}
@@ -20,7 +20,7 @@ detHtml=function(id,train){let h=_detHtml(id,train).replace('>BREAKTHROUGH</butt
 const _resolveStar=resolveStar;
 resolveStar=function(star){const r=_resolveStar(star);if(r.bt){r.tag=r.tag.replace('BREAKTHROUGH','VIRTUE');r.bt=false}return r};
 
-(function(){const st=document.createElement('style');st.textContent='.rom2{color:var(--dim);font-size:.58em;font-weight:400;margin-left:.9em;letter-spacing:.02em}.ic:has(path[d^="M50 4A46"]){transform:rotate(-90deg) scaleX(-1)}';document.head.appendChild(st)})();
+(function(){const st=document.createElement('style');st.textContent='.rom2{color:var(--dim);font-size:.58em;font-weight:400;margin-left:.9em;letter-spacing:.02em}.ic:has(path[d^="M50 4A46"]){transform:rotate(-75deg) scaleX(-1)}';document.head.appendChild(st)})();
 
 /* 게임 내 강화는 이번 플레이에서만: 전투 승리 경험치와 수련 카드를 제거 */
 winBattle=function(){
@@ -113,3 +113,35 @@ Object.assign(SFX,{
  lose:()=>[392,330,262].forEach((f,i)=>tone(f,.4,'sine',.06,0,i*.16)),
  pull:()=>{noise(.4,.06,600,3500,0,'bandpass',1.5);tone(500,.35,'sine',.05,900)},
  rare:()=>{[784,988,1175,1568].forEach((f,i)=>tone(f,.45,'sine',.05,0,.1+i*.1))}});
+
+/* 살구 아이콘 */
+const AP2='<path d="M50 20C72 18 90 36 89 58C88 80 70 93 50 92C30 93 12 80 11 58C10 36 28 18 50 20Z" fill="#f2a64a"/><path d="M62 30C80 36 88 54 82 72C76 84 66 90 56 91C74 78 78 52 62 30Z" fill="#e8784a" opacity=".55"/><path d="M50 24C45 44 45 68 50 90" stroke="#c9782c" stroke-width="3.5" fill="none" opacity=".7" stroke-linecap="round"/><path d="M50 22C50 14 52 9 56 5" stroke="#7a5230" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M54 14C60 3 76 3 84 10C78 22 62 24 54 14Z" fill="#7fc08a"/>';
+function fixAP(root){(root||document).querySelectorAll('svg.ic:not([data-ap])').forEach(v=>{if(v.querySelector('path[d^="M50 22C50"]')){v.innerHTML=AP2;v.setAttribute('data-ap','1')}})}
+new MutationObserver(()=>fixAP()).observe(document.getElementById('game'),{childList:true,subtree:true});
+fixAP();
+
+/* CAST: 배너 + 뽑기 버튼, 살구 교환은 구석으로 */
+(function(){const st=document.createElement('style');st.textContent=`
+.banner{position:absolute;left:12%;right:12%;top:9%;bottom:28%;border:1px solid var(--line);background:rgba(255,255,255,.03);display:grid;place-items:center;overflow:hidden}
+.banner span{letter-spacing:.6em;padding-left:.6em;font-weight:200;font-size:1.6em;color:var(--dim)}
+.banner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pbtns{position:absolute;left:12%;right:12%;bottom:11%;display:flex;gap:2%}
+.pbtns button{flex:1;display:flex;justify-content:space-between;align-items:center;background:var(--pan);border:1px solid var(--line);color:var(--fg);font:inherit;padding:.7em 1.2em;cursor:pointer;transition:border-color .15s}
+.pbtns button:hover{border-color:var(--fg)}
+.pbtns b{font-weight:600;letter-spacing:.1em}
+.pbtns span{display:inline-flex;align-items:center;gap:.4em}
+.exbtn{position:absolute;right:2.5%;bottom:4%}
+.exbox{display:flex;flex-direction:column;align-items:center;gap:1.2em}
+`;document.head.appendChild(st)})();
+toGacha=function(){
+ show(`<div class="bg dark"></div>${wallet()}
+ <div class="banner"><span>CAST</span><img src="img/banner.png" alt="" onerror="this.remove()"></div>
+ <div class="pbtns"><button onclick="pull(1)"><b>× 1</b><span>${TG} ${CFG.PULL_COST}</span></button><button onclick="pull(10)"><b>× 10</b><span>${TG} ${CFG.PULL10_COST}</span></button></div>
+ <div class="back"><button class="tb" onclick="toTitle()">BACK</button></div>
+ <button class="mini exbtn" onclick="openEx()">${AP} → ${TG}</button><div id="ovl"></div>`)};
+function openEx(){const on=S.ap>=CFG.AP_PER_COIN;
+ $('ovl').innerHTML=`<div class="ov" onclick="toGacha()"><div class="exbox" onclick="event.stopPropagation()">
+  <div style="display:flex;align-items:center;gap:.6em;font-size:1.1em">${AP} ${CFG.AP_PER_COIN} <span class="sub">→</span> ${TG} 1</div>
+  <div class="row" style="justify-content:center"><button class="mini" ${on?'':'disabled'} onclick="exch(1)">1</button><button class="mini" ${on?'':'disabled'} onclick="exch(0)">MAX</button></div>
+  <button class="tb" onclick="toGacha()">BACK</button></div></div>`}
+const _exch=exch;exch=function(one){_exch(one);openEx()};
