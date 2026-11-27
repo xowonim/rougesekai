@@ -1,7 +1,7 @@
 /* 3차 수정: 아이콘 · 프로필 · 돌파 탭 이름 */
-const BKB2='<rect x="7.5" y="5" width="17" height="22" rx="1" fill="#e2d8bd" stroke="#1a1814" stroke-width="1"/><path d="M11 5v22" stroke="#8c3b31" stroke-width=".7"/><path d="M7.5 9h3.5M7.5 13h3.5M7.5 17h3.5M7.5 21h3.5M7.5 25h3.5" stroke="#8c3b31" stroke-width=".9"/><rect x="14.5" y="8" width="6.5" height="10" fill="none" stroke="#1a1814" stroke-width=".8"/><path d="M16.2 11h2.2M16.2 13.5h2.2M16.2 16h2.2" stroke="#1a1814" stroke-width=".7"/>';
+const BKB2='<rect x="8" y="4" width="16" height="24" rx="1.2" fill="#14161c" stroke="#f0e2ae" stroke-width="1.1"/><path d="M11.2 4.6v22.8" stroke="#f0e2ae" stroke-opacity=".6" stroke-width=".8" stroke-dasharray="1.6 2"/><rect x="14.2" y="8" width="7" height="12" fill="none" stroke="#f0e2ae" stroke-opacity=".8" stroke-width=".8"/><text x="17.7" y="16.6" text-anchor="middle" font-size="6.6" fill="#f0e2ae" font-family="\'Noto Serif CJK KR\',\'Noto Serif KR\',\'Noto Serif CJK JP\',serif">修</text>';
 function bkSvg(k){const n={s:1,m:2,l:3}[k[1]]||1;let g='';
- if(k[0]==='l'){const T=n===1?[[0,0,0,1]]:n===2?[[-3,1,-8,.95],[3,0,5,.95]]:[[-5,2,-13,.88],[5,1,10,.88],[0,-1,0,.92]];
+ if(k[0]==='l'){const T=n===1?[[0,0,0,1]]:n===2?[[-3.5,1.5,-9,.96],[3,0,4,.96]]:[[-6,2,-14,.9],[6,1,11,.9],[0,-1,0,.94]];
   g=T.map(t=>`<g transform="translate(${t[0]} ${t[1]}) rotate(${t[2]} 16 16) translate(16 16) scale(${t[3]}) translate(-16 -16)">${BKB2}</g>`).join('')}
  else{g=`<circle cx="16" cy="16" r="10.5" fill="#14161c" stroke="#f0e2ae" stroke-width="1.1"/><text x="16" y="21.2" text-anchor="middle" font-size="14" fill="#f0e2ae" font-family="'Noto Serif CJK KR','Noto Serif KR','Noto Serif CJK JP',serif">氣</text>`;
   if(n>=2)g+=`<circle cx="16" cy="16" r="14" fill="none" stroke="#f0e2ae" stroke-opacity=".55" stroke-width=".8"/>`;
@@ -13,13 +13,14 @@ function profHtml(c){const p=PROF[c.id]||{};
  const grid=cell('소속',v('aff'))+cell('성별',v('sex'))+cell('나이',v('age'))+cell('신체',v('ht'))+cell('종족',v('race',c.race))+cell('주 오행',v('el',c.el))+cell('능력',v('abil'),1);
  const intro=p.intro||LORE[c.id];
  const paras=intro?intro.split(/(?<=[.!?])\s+/).filter(Boolean).map(t=>`<p style="margin:0">${t}</p>`).join(''):'';
- return `${p.rom?`<div class="rom">${p.rom}</div>`:''}<div class="pg">${grid}</div>${paras?`<div class="intro">${paras}</div>`:''}`}
+ return `<div class="pg">${grid}</div>${paras?`<div class="intro">${paras}</div>`:''}`}
 const _detHtml=detHtml;
-detHtml=function(id,train){return _detHtml(id,train).replace('>BREAKTHROUGH</button>','>VIRTUE</button>')};
+detHtml=function(id,train){let h=_detHtml(id,train).replace('>BREAKTHROUGH</button>','>VIRTUE</button>');
+ const p=PROF[id];if(train&&p&&p.rom){const n=CHM[id].name;h=h.replace(`<div class="nm">${n}</div>`,`<div class="nm">${n}<span class="rom2">${p.rom}</span></div>`)}return h};
 const _resolveStar=resolveStar;
 resolveStar=function(star){const r=_resolveStar(star);if(r.bt){r.tag=r.tag.replace('BREAKTHROUGH','VIRTUE');r.bt=false}return r};
 
-(function(){const st=document.createElement('style');st.textContent='.rom{color:var(--fg);font-size:1.1em;font-weight:500;letter-spacing:.04em;margin:.35em 0 .2em}';document.head.appendChild(st)})();
+(function(){const st=document.createElement('style');st.textContent='.rom2{color:var(--dim);font-size:.58em;font-weight:400;margin-left:.9em;letter-spacing:.02em}.ic:has(path[d^="M50 4A46"]){transform:rotate(-90deg) scaleX(-1)}';document.head.appendChild(st)})();
 
 /* 게임 내 강화는 이번 플레이에서만: 전투 승리 경험치와 수련 카드를 제거 */
 winBattle=function(){
