@@ -114,7 +114,7 @@ pickReward=function(i){
  if(id==='map'){rewardMap();return}
  if(it.orb)addOrb(it.orb);
  else if(it.mat)S.mats[it.mat]++;
- else if(id==='yin'){const v=60+run.wave*4;S.coin+=v;run.gained+=v}
+ else if(id==='yin'){const v=20+run.wave*2;S.coin+=v;run.gained+=v}
  else if(id==='apr')S.ap+=1;
  else if(id==='inv')run.invite=true;
  finishReward()};
@@ -140,7 +140,7 @@ paintMenu=function(){_pm13();
  else if(run.phase==='reward'&&run.cards&&!document.querySelector('#ovl .plist,#ovl .mapl')){
   const ex=(run.exp||[]).map(e=>{const f=run.party[e.i],up=e.l1>e.l0;
    return `<div class="xc"><div class="xn"><span>${f.ch.name}</span><span>${up?`Lv.${e.l0} → Lv.${e.l1}`:`Lv.${e.l1}`}</span></div><div class="xb"><i style="width:${e.pct}%"></i></div><div class="xg"><span>+${e.g} EXP</span>${up?'<b>LEVEL UP</b>':''}</div></div>`}).join('');
-  const cards=run.cards.map((c,i)=>{const m=ITEMS[c.id],col=RCOL[m.r],d=c.id==='yin'?'+'+(60+run.wave*4):m.d;
+  const cards=run.cards.map((c,i)=>{const m=ITEMS[c.id],col=RCOL[m.r],d=c.id==='yin'?'+'+(20+run.wave*2):m.d;
    return `<button class="rw" style="--rc:${col}" onclick="pickReward(${i})"><span class="ri">${itemIcon(c.id,col)}</span><b>${m.n}</b><span class="ds">${d.replace(/\n/g,'<br>')}</span></button>`}).join('');
   $('ovl').innerHTML=`<div class="ov" style="flex-direction:column;gap:1.3em"><div class="gain">${run.note}</div><div class="xrow">${ex}</div><div class="rrow">${cards}</div></div>`}};
 
