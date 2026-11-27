@@ -34,3 +34,34 @@ new MutationObserver(ms=>{ms.forEach(m=>{if(m.type==='attributes'){if(m.target.t
 toPrep=function(){mode='start';party=S.party.filter(id=>S.chars[id]).slice(0,CFG.PARTY_MAX);
  if(!party.length){const f=CH.find(c=>S.chars[c.id]);party=f?[f.id]:[]}
  cur=party[0]||(CH.find(c=>S.chars[c.id])||CH[0]).id;drawPrep()};
+/* 혼돈 대사 키 이전 */
+if(typeof DLG!=='undefined'&&DLG.honton&&!DLG.chaos)DLG.chaos=DLG.honton;
+
+/* 희귀도 색: 4 분홍, 5 금색, 6 빨강 */
+const STARCOL={4:'#f08fb8',5:'#f2d04a',6:'#e8473f'};
+const rcolor=id=>{const c=CHM[id];return c&&STARCOL[c.star]||null};
+const _det21b=detHtml;
+detHtml=function(id,train){let h=_det21b(id,train);const C=rcolor(id);if(!C)return h;
+ h=h.replace(/<b class="rk">/g,`<b class="rk" style="color:${C};border-color:${C}">`)
+  .replace(/<div class="xpb"><i style="/g,`<div class="xpb"><i style="background:${C};`)
+  .replace(/<div class="bs on"><i>/g,`<div class="bs on"><i style="background:${C};border-color:${C}">`)
+  .replace(/<div class="btsum">.*?<\/div>/s,m=>m.replace(/<b>/g,`<b style="color:${C}">`));
+ return h};
+const _de21=drawEnh;
+drawEnh=function(){_de21();const e=document.getElementById('enh'),C=rcolor(cur);if(e&&C)e.querySelectorAll('.xpb i').forEach(i=>i.style.background=C)};
+
+/* 강화 창 · VIRTUE 모양 */
+(function(){const st=document.createElement('style');
+ st.textContent='.enhbox .er button{border-color:transparent}.enhbox .ef{justify-content:center;gap:4em;margin-top:.4em}.enhbox .ef button{border-radius:999px;padding:.75em 2.8em;min-width:8em;font-size:1em;letter-spacing:.12em;justify-content:center}.bs i{border-radius:50%}';
+ document.head.appendChild(st)})();
+
+/* 효과음 */
+Object.assign(SFX,{
+ enh:()=>{tone(520,.28,'triangle',.06,780,0,{echo:1});tone(780,.34,'sine',.045,0,.09,{echo:1})},
+ lvup:()=>{[523,659,784,1047,1319].forEach((f,i)=>{tone(f,.5,'triangle',.07,0,i*.08,{echo:1});tone(f*2,.35,'sine',.02,0,i*.08)});noise(.4,.05,1500,6000,0,'bandpass',2)},
+ start:()=>{noise(.6,.07,300,4200,0,'bandpass',1.5);tone(196,.8,'sine',.1,392,0,{echo:1});tone(392,.7,'triangle',.06,0,.2,{echo:1});tone(588,.8,'sine',.05,0,.34,{echo:1});tone(784,.8,'sine',.03,0,.46,{echo:1})}});
+const _eg21=enhGo;
+enhGo=function(){if(!ENH)return;const o=S.chars[cur],i=ENH.i,ch=ENH.kind==='char',l0=ch?o.lv:o.sk[i].lv;
+ _eg21();const o2=S.chars[cur],l1=ch?o2.lv:o2.sk[i].lv;sfx(l1>l0?'lvup':'enh')};
+const _sr21=startRun;
+startRun=function(ids){sfx('start');_sr21(ids)};
