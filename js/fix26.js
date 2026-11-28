@@ -58,7 +58,7 @@ const evx=(ev,t,f,v,o)=>{o=o||{};ev.push({t,s:snap(),raw:true,pop:v!==undefined?
 const fieldAll=(a,d)=>run.dbl?[...dAllies(),...dFoes()]:[a,d].filter(Boolean);
 const foesOf=(a,d)=>run.dbl?(a.side==='p'?dFoes():dAllies()):[d];
 const fighters=()=>[...new Set([...(run.party||[]),run.enemy,run.enemy2,run.eA].filter(Boolean))];
-const SKEYS=['mp','stun','stunImm','shock','shockT','dot','psn','conf','confAge','seal','sealAge','love','loveAge','d','dT','m','mT','dbStk','slowStk','slowT','spdStk','spdT','spdB','spdBT','evStk','inv','evade','brand','dis','rage','rageAge','sloth','slothAge','petri','petriAge','petriSlow','defStk','stk','rest','pend','dive','regenT','ignT','ignP','curseT','curseDisT','curseDisP','last'];
+const SKEYS=['mp','stun','stunImm','shock','shockT','dot','psn','conf','confAge','seal','sealAge','love','loveAge','d','dT','m','mT','dbStk','slowStk','slowT','spdStk','spdT','spdB','spdBT','evStk','inv','evade','brand','dis','rage','rageAge','sloth','slothAge','petri','petriAge','petriSlow','defStk','stk','rest','pend','dive','regenT','ignT','ignP','curseT','curseDisT','curseDisP','tpStk','sealT','ladySpd','eqSpent','last'];
 const snapAll=()=>fighters().map(f=>{const o={f,hp:f.hp};SKEYS.forEach(k=>{o[k]=f[k]===undefined?undefined:structuredClone(f[k])});return o});
 const restoreOne=(f,o)=>{f.hp=o.hp;SKEYS.forEach(k=>{if(o[k]!==undefined)f[k]=structuredClone(o[k])})};
 
