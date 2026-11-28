@@ -27,7 +27,7 @@ CHM.amir.sk=[
 CHM.samael.sk=[
  A('영대','입을 맞춰 상대의 생명력을 흡수한다.',55,{acc:100,dr:50}),
  A('소멸','검게 변한 손으로 닿은 것을 가루로 만든다. 2회 연속으로 공격한다.',100,{acc:90,multi:[2,2],dr:50}),
- A('죄악','영혼 심판으로 죄를 부여한다. 5턴간 지속 피해를 입히고 애정 · 나태 · 분노 중 하나를 건다.',20,{acc:90,dotN:[3,5],rndSt:['love','sloth','rage']})];
+ A('죄악','영혼 심판으로 죄를 부여한다. 5턴간 지속 피해를 입히고 애정 · 나태 · 분노 중 하나를 건다. 준 피해만큼 생명력을 흡수한다.',20,{acc:90,dotN:[3,5],rndSt:['love','sloth','rage'],dr:100})];
 CHM.anax.sk=[
  A('낙인','검은 공막과 붉은 홍채의 눈동자 낙인을 새긴다.',35,{acc:85,brand:1}),
  A('석화','감고 있던 눈을 떠, 마주친 상대를 돌로 만든다.',30,{acc:80,sc:'범위',petri:100}),
@@ -219,7 +219,7 @@ function body(a,d,idx,ev){
   if(got>0)evx(ev,`${a.ch.name} HP ${got} 흡수`,a,'+'+got,{cls:'heal',fx:{k:'heal'},sfx:'heal'})}
  /* 공격 후 효과 */
  if(landed&&d.hp>0){
-  if(sk.dotN){d.dot={pct:sk.dotN[0],t:sk.dotN[1]};evx(ev,`${josa(d.ch.name,'은/는')} 지속 피해를 입는다.`,d,'지속',{fx:{k:'down',c:'#8a6fb8'},sfx:'down'})}
+  if(sk.dotN){d.dot={pct:sk.dotN[0],t:sk.dotN[1],sid:a.ch.id,ss:a.side,dr:sk.dr||0};evx(ev,`${josa(d.ch.name,'은/는')} 지속 피해를 입는다.`,d,'지속',{fx:{k:'down',c:'#8a6fb8'},sfx:'down'})}
   if(sk.rndSt){const pool=sk.rndSt.filter(k=>!(k==='love'?d.love:k==='sloth'?d.sloth:d.rage));if(pool.length)applySt(d,pool[Math.floor(Math.random()*pool.length)],ev)}
   if(sk.petri&&Math.random()*100<sk.petri)applySt(d,'petri',ev);
   if(sk.defDn){d.defStk=Math.min(5,(d.defStk||0)+1);evx(ev,`${d.ch.name} 방어력 저하 (${d.defStk}단계)`,d,'방어력 DOWN x'+d.defStk,{fx:{k:'down',c:'#ad8fd8'},sfx:'down'})}
@@ -258,7 +258,12 @@ hitCalc=function(a,d,sk,k){
 const _eot26=endOfTurn;
 endOfTurn=function(ev){
  const L=[run.party[run.active],run.enemy];
+ const dd=L.map(f=>f&&f.hp>0&&f.dot&&f.dot.dr?{f,v:Math.min(f.hp,Math.max(1,Math.round(f.maxhp*f.dot.pct/100))),sid:f.dot.sid,ss:f.dot.ss,dr:f.dot.dr}:null).filter(Boolean);
  _eot26(ev);
+ dd.forEach(o=>{const src=fighters().find(x=>x.ch.id===o.sid&&x.side===o.ss);
+  if(!src||src.hp<=0)return;
+  const g=Math.round(o.v*o.dr/100),b=src.hp;src.hp=Math.min(src.maxhp,src.hp+g);
+  if(src.hp>b)evx(ev,`${src.ch.name} HP ${src.hp-b} 흡수`,src,'+'+(src.hp-b),{cls:'heal',fx:{k:'heal'},sfx:'heal'})});
  L.forEach(f=>{
   if(!f)return;
   checkBk(f,ev);
