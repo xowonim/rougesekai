@@ -2,10 +2,13 @@
    - ALIAS: 예전 ID를 새 ID로 이전
    - 현재 목록에 없는 캐릭터는 삭제하지 않고 hold에 보관했다가, 목록에 다시 생기면 복원 */
 CHM.ruihu=CHM.luihu;
+/* 하나 나이틀리: 이미지·저장 ID를 hannah로 변경, 주 오행은 水 (예전 ID hana는 별칭으로 유지) */
+(function(){const c=CHM.hana;if(!c)return;c.id='hannah';c.el='水';CHM.hannah=c;
+ MAPS.forEach(m=>{m.pool=m.pool.map(x=>x==='hana'?'hannah':x);if(m.boss==='hana')m.boss='hannah'})})();
 /* 혼돈: 이미지·저장 ID를 chaos로 변경 (예전 ID honton은 별칭으로 유지) */
 (function(){const c=CHM.honton;if(!c)return;c.id='chaos';CHM.chaos=c;
  MAPS.forEach(m=>{m.pool=m.pool.map(x=>x==='honton'?'chaos':x);if(m.boss==='honton')m.boss='chaos'})})();
-(function(){const KEY='kamisekai_rogue_v2',ALIAS={luihu:'ruihu',honton:'chaos',merhen:'marchen',anak:'anax',hwanhui:'hwanhee',jeong:'jung',ganghyeon:'hyun',seungah:'seunga',taote:'taotie'};
+(function(){const KEY='kamisekai_rogue_v2',ALIAS={luihu:'ruihu',honton:'chaos',merhen:'marchen',anak:'anax',hwanhui:'hwanhee',jeong:'jung',ganghyeon:'hyun',seungah:'seunga',taote:'taotie',hana:'hannah'};
  try{const raw=localStorage.getItem(KEY);if(!raw)return;
   const o=JSON.parse(raw);if(!o||typeof o!=='object')return;
   try{const b=JSON.parse(localStorage.getItem(KEY+'_bak')||'null'),n=x=>x&&x.chars?Object.keys(x.chars).length+Object.keys(x.hold||{}).length:0;
