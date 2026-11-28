@@ -53,7 +53,7 @@ nextBattle=function(){
  let R=REG[run.regions[b]];run.region=R.id;MAPS.length=1;MAPS[0]=R;
  run.enemy=makeEnemy(w);
  let met='';
- if(R.id==='sephirot'&&run.enemy.ch.id==='anak'){
+ if(R.id==='sephirot'&&run.enemy.ch.id==='anax'){
   run.regions[b]='anak';R=REG.anak;run.region='anak';MAPS[0]=R;met=`아낙을 만났다. ${R.name}.  ${R.tip}  `}
  run.party.forEach(resetBattleState);
  if(run.party[run.active].hp<=0)run.active=run.party.findIndex(f=>f.hp>0);

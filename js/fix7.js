@@ -32,7 +32,7 @@ paintMenu=function(){_pm7();
 /* ---------- 지도 메커니즘: '세상' (5스테이지마다 지역 이동) ---------- */
 CFG.MAP_STAGES=5;
 CHM.horus={id:'horus',name:'호루스',el:'？',star:5,race:'—',role:'s',sk:[
- A('부리','날카로운 부리로 쯔다.',45,{acc:100}),
+ A('부리','날카로운 부리로 쫀다.',45,{acc:100}),
  A('날갯짓','날개를 휘둘러 몰아친다.',60)]};
 const REG={
  tamaki:{id:'tamaki',name:'타마키 신사',g:['#7a6a2c','#1a160c'],
@@ -42,16 +42,16 @@ const REG={
   spawn:[[98,{race:['원향족']}],[2,{ids:['jin']}]],
   next:[['sephirot',50],['glisha',50]]},
  sephirot:{id:'sephirot',name:'세피로트',g:['#3f6e3c','#101a10'],
-  spawn:[[90,{race:['이사야족']}],[10,{ids:['merhen','anak']}]],
+  spawn:[[90,{race:['이사야족']}],[10,{ids:['marchen','anax']}]],
   next:[['tamaki',1],['iwonhyang',33],['badr',33],['glisha',33]]},
  badr:{id:'badr',name:'바드르 제단',g:['#6e4424','#1a100a'],
   spawn:[[50,{ids:['horus']}],[50,{ids:['amir']}]],
   next:[['sephirot',50],['glisha',50]]},
- glisha:{id:'glisha',name:'글리샴라볼라스',g:['#4c1a16','#140808'],
+ glisha:{id:'glisha',name:'글리샬라볼라스',g:['#4c1a16','#140808'],
   spawn:[[99,{race:['사흉']}],[1,{ids:['samael','kuroaka','oscar']}]],
   next:[['sephirot',33],['iwonhyang',33],['badr',33]]},
  anak:{id:'anak',name:'아낙의 고유차원',g:['#2c3254','#0e1018'],tip:'아군의 공격과 방어가 10% 줄어든다.',
-  spawn:[[100,{ids:['anak']}]],
+  spawn:[[100,{ids:['anax']}]],
   next:[['sephirot',100]]}};
 const wpick=l=>{let t=l.reduce((a,b)=>a+b[0],0),r=Math.random()*t;for(const x of l){if((r-=x[0])<0)return x[1]}return l[l.length-1][1]};
 function pickEnemy(R){
@@ -68,7 +68,7 @@ function ensureRegion(b){
 
 makeEnemy=function(w){
  const R=MAPS[0],boss=w%CFG.MAP_STAGES===0;
- const ch=pickEnemy(R);if(ch.id==='anak')run.metAnak=true;
+ const ch=pickEnemy(R);if(ch.id==='anax')run.metAnak=true;
  const lv=1+Math.floor((w-1)*1.1)+(boss?2:0);
  const base=Math.min(1.5,.75+.012*(w-1));
  const e=newFighter(ch,lv,0,'e',boss?{hp:base*1.5,atk:base*1.1,def:base*1.1}:{all:base});
