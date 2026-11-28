@@ -1,10 +1,10 @@
 /* 35차 수정: 전투 메시지창 (행동 문구 -> 행동 -> 다음 문구), 쓰러짐 문구, CPU 대사는 마지막 캐릭터 기준 */
 (function(){
 const s=document.createElement('style');
-s.textContent=`.msgb{width:100%;box-sizing:border-box;min-height:3.6em;display:flex;align-items:center;padding:.7em 1.4em;font-size:1.1em;letter-spacing:.04em;line-height:1.5;background:rgba(10,12,16,.55);border:1px solid rgba(255,255,255,.14);animation:msgin .18s ease-out}
-@keyframes msgin{from{opacity:.2;transform:translateY(.25em)}}
-.msgb{position:relative}.msgb::after{content:'\\25BC';position:absolute;right:1.1em;bottom:.6em;font-size:.7em;color:var(--dim);animation:msgbk 1s ease-in-out infinite}
-@keyframes msgbk{50%{opacity:.25}}`;
+s.textContent=`#bmsg{position:absolute;inset:0;z-index:90;cursor:pointer}
+#bmsg .dbox{position:absolute;left:0;right:0;bottom:0;height:30%;box-sizing:border-box;padding:1.4em 12% 1.6em;display:flex;flex-direction:column;justify-content:center;background:rgba(8,9,12,.97);border-top:1px solid var(--line)}
+#bmsg .dt{line-height:1.75;min-height:1.75em}
+#bmsg .dh{position:absolute;right:7%;bottom:1.2em;width:0;height:0;border-left:.35em solid transparent;border-right:.35em solid transparent;border-top:.5em solid var(--dim);animation:dlgb 1s infinite}`;
 document.head.appendChild(s);
 
 /* ---------- 문구 변환 ---------- */
@@ -32,16 +32,22 @@ function prep(ev){
    const nm=e.t.replace(/[을를] 쓰러뜨렸다\.$/,'');e.disp=`${josa(nm,'은/는')} 쓰러졌다!`}})}
 
 /* ---------- 재생 ---------- */
+let BM=null;
 function msg(t){
- const el=document.getElementById('cards');if(!el)return;
- el.innerHTML='';const d=document.createElement('div');d.className='msgb';d.textContent=t;el.appendChild(d);
- ['sideL','sideR'].forEach(k=>{const x=document.getElementById(k);if(x)x.innerHTML=''})}
+ let d=document.getElementById('bmsg');
+ if(!d){const g=document.getElementById('screen');if(!g)return;
+  d=document.createElement('div');d.id='bmsg';
+  d.addEventListener('click',ev=>{ev.stopPropagation();if(typeof sfx==='function')sfx('tap');if(BM)BM()});
+  g.appendChild(d)}
+ d.innerHTML='<div class="dbox"><div class="dt"></div><i class="dh"></i></div>';
+ d.querySelector('.dt').textContent=t}
+const unmsg=()=>{const d=document.getElementById('bmsg');if(d)d.remove()};
 playEvents=function(ev,done){
  try{prep(ev)}catch(err){}
  let i=0,timer=null;
  const step=()=>{
   clearTimeout(timer);
-  if(i>=ev.length){done();return}
+  if(i>=ev.length){BM=null;unmsg();done();return}
   const e=ev[i++];paintInfo(e.s,true,e.pop);
   let t='';try{t=e.disp!==undefined?e.disp:disp(e)}catch(err){}
   if(t)msg(t);
@@ -49,7 +55,7 @@ playEvents=function(ev,done){
   /* 문구가 있는 줄은 클릭해야 다음으로 넘어간다 */
   if(t)return;
   timer=setTimeout(step,e.d||((e.pop||e.fx)?700:450))};
- skipFn=step;step()};
+ BM=step;skipFn=step;step()};
 
 /* ---------- 더블 배틀: 마지막으로 쓰러진 적 기록 ---------- */
 const _dbt35=dblTurn;
