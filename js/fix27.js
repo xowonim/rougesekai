@@ -6,29 +6,29 @@ const EL_O={'火':.5,'水':.5,'木':2,'金':2};
 /* ---------- 스킬 데이터 ---------- */
 CHM.hyun.sk=[
  A('창바늘','창처럼 긴 바늘로 찌른다. 2회 연속으로 공격한다.',55,{acc:90,multi:[2,2]}),
- W('독심','뱀으로 심리를 파악해 허점을 찌른다. 2턴간 상대의 ②, ③ 스킬을 봉인한다.',0,{acc:85,sealX:2,kn:'상대 변화'}),
- A('탐색','상대의 과거를 탐색한다. 첫 턴에는 시간이 멈춰 흑백 필드가 되고, 다음 턴에 10회 연속으로 공격하며 필드가 풀린다.',10,{acc:100,sc:'범위',multi:[10,10],bw:1})];
+ W('독심','뱀으로 심리를 파악해 허점을 찌른다. 2턴간 상대의 ②, ③ 스킬을 봉인한다.',0,{acc:85,sealX:2,mp:12,kn:'상대 변화'}),
+ A('탐색','상대의 과거를 탐색한다. 첫 턴에는 시간이 멈춰 흑백 필드가 되고, 다음 턴에 10회 연속으로 공격하며 필드가 풀린다.',10,{acc:100,sc:'범위',multi:[10,10],bw:1,mp:22})];
 CHM.seunga.sk=[
  A('쿠나이','쿠나이와 표창을 던진다.',10,{acc:90,multi:[2,5]}),
- Z('순간이동','거북을 이용해 빠르게 이동한다. 1턴간 공격을 피하고, 속도가 3% 오른다. (최대 10중첩)',{tp:1}),
- A('관망하는 자세','가만히 지켜보다 한꺼번에 쏟아낸다. 첫 턴에는 시간이 멈춰 흑백 필드가 되고, 다음 턴에 10회 연속으로 공격하며 필드가 풀린다.',15,{acc:100,sc:'범위',multi:[10,10],bw:1})];
+ Z('순간이동','거북을 이용해 빠르게 이동한다. 1턴간 공격을 피하고, 속도가 3% 오른다. (최대 10중첩)',{tp:1,mp:8}),
+ A('관망하는 자세','가만히 지켜보다 한꺼번에 쏟아낸다. 첫 턴에는 시간이 멈춰 흑백 필드가 되고, 다음 턴에 10회 연속으로 공격하며 필드가 풀린다.',15,{acc:100,sc:'범위',multi:[10,10],bw:1,mp:18})];
 CHM.anemone.sk=[
  A('미미한 공격..','어딘가 힘이 빠진 공격을 한다. 火 · 水에게는 약하고 木 · 金에게는 강하다.',5,{acc:95,tm:EL_O}),
- A('선물 배달','선물을 배달한다. 받은 쪽은 기운이 빠진다. (공격력 10% 저하, 최대 2중첩)',-15,{acc:70,gift:1}),
- B('고귀한 숙녀','숙녀의 품격으로 아군이 가볍게 움직인다. 파티의 속도와 회피율이 10% 오른다.',0,{acc:75,lady:1,noTgt:1,kn:'상대 변화',
+ A('선물 배달','선물을 배달한다. 받은 쪽은 기운이 빠진다. (공격력 10% 저하, 최대 2중첩)',-15,{acc:70,gift:1,mp:8}),
+ B('고귀한 숙녀','숙녀의 품격으로 아군이 가볍게 움직인다. 파티의 속도와 회피율이 2턴간 10% 오른다.',0,{acc:75,lady:1,noTgt:1,mp:20,kn:'상대 변화',
   aiCond:f=>!(f.ladySpd>0)})];
 CHM.esquel.sk=[
  A('아지태의 검술','아지태에게 배운 검술로 벤다.',35,{acc:70}),
  H('재생','생명력을 소모해 부상을 치유한다. MP 대신 자신의 HP를 5% 소모한다.',30,{acc:100,kn:'단일 회복',hpPct:5,mp:0,eqLog:1}),
- H('자가재생','②로 소모한 생명력만큼 자신의 HP를 회복한다. 사용하면 소모량은 초기화된다.',0,{acc:100,kn:'자기 변화',selfRegen:1,mp:0,noTgt:1})];
+ H('자가재생','②로 소모한 생명력만큼 자신의 HP를 회복한다. 사용하면 소모량은 초기화된다.',0,{acc:100,kn:'자기 변화',selfRegen:1,mp:12,noTgt:1})];
 CHM.taotie.sk=[
  A('검술','당나라 시절부터 애용한 무기로 벤다.',35,{acc:95}),
- W('나태','상대에게 나태를 부여해 움직임을 둔하게 만든다.',0,{acc:95,inflict:['sloth'],kn:'상대 변화'}),
- A('소멸','검게 변한 손으로 닿은 것을 가루로 만든다. 2회 연속으로 공격하고, 준 피해의 50%만큼 생명력을 흡수한다.',100,{acc:50,multi:[2,2],dr:50,kn:'단일 공격'})];
+ W('나태','상대에게 나태를 부여해 움직임을 둔하게 만든다.',0,{acc:95,inflict:['sloth'],mp:12,kn:'상대 변화'}),
+ A('소멸','검게 변한 손으로 닿은 것을 가루로 만든다. 2회 연속으로 공격하고, 준 피해의 50%만큼 생명력을 흡수한다.',100,{acc:50,multi:[2,2],dr:50,mp:26,kn:'단일 공격'})];
 CHM.chaos.sk=[
  A('흡수','생명체를 먹으며 음의 기운을 흡수한다. 준 피해의 50%만큼 생명력을 흡수한다.',30,{acc:90,dr:50}),
- A('소멸','검게 변한 손으로 닿은 것을 가루로 만든다. 2회 연속으로 공격하고, 준 피해의 50%만큼 생명력을 흡수한다.',100,{acc:50,multi:[2,2],dr:50}),
- W('탐닉','상대의 본능을 극대화한다. 애정 · 나태 · 혼란을 모두 건다.',0,{acc:90,inflict:['love','sloth','conf'],kn:'상대 변화'})];
+ A('소멸','검게 변한 손으로 닿은 것을 가루로 만든다. 2회 연속으로 공격하고, 준 피해의 50%만큼 생명력을 흡수한다.',100,{acc:50,multi:[2,2],dr:50,mp:20}),
+ W('탐닉','상대의 본능을 극대화한다. 애정 · 나태 · 혼란을 모두 건다.',0,{acc:90,inflict:['love','sloth','conf'],mp:30,kn:'상대 변화'})];
 
 /* ---------- 도우미 ---------- */
 let MC27=null;
@@ -54,12 +54,12 @@ function inflict(d,k,ev){
 
 /* ---------- 스킬 상태 ---------- */
 const _rbs27=resetBattleState;
-resetBattleState=function(f){_rbs27(f);f.sealT=0;f.ladySpd=0;f.tpStk=0;f.eqSpent=0;f.bwNew=false};
+resetBattleState=function(f){_rbs27(f);f.sealT=0;f.ladySpd=0;f.ladyT=0;f.ladyEvPrev=0;f.tpStk=0;f.eqSpent=0;f.bwNew=false};
 const _cl27=cleanse;
 cleanse=function(f){const had=_cl27(f)||(f.sealT>0);f.sealT=0;return had};
 const _st27=st;
 st=function(f,k){let v=_st27(f,k);
- if(k==='spd'){if(f.tpStk>0)v*=1+.03*f.tpStk;if(f.ladySpd>0)v*=1+f.ladySpd}
+ if(k==='spd'){if(isBwSk(f)&&!f.bwNew)v+=1e6;if(f.tpStk>0)v*=1+.03*f.tpStk;if(f.ladySpd>0)v*=1+f.ladySpd}
  if(f.ch.id==='seunga'&&(k==='atk'||k==='spd')&&partner(f,'hyun'))v*=1.05;
  return v};
 const _mc27=mpCost;
@@ -140,8 +140,8 @@ function body(a,d,idx,ev){
  if(sk.lady){
   const r=castOnly(a,d,idx,ev,sk);
   if(!r.cast||r.fail)return;
-  team(a).forEach(f=>{f.ladySpd=.1;f.evStk=Math.max(f.evStk||0,2/3)});
-  evx(ev,'파티의 속도와 회피율이 10% 오른다.',a,'속도 · 회피 UP',{fx:{k:'up',c:'#6fa0dc'},sfx:'up'});return}
+  team(a).forEach(f=>{if(!(f.ladyT>0))f.ladyEvPrev=f.evStk||0;f.ladySpd=.1;f.ladyT=2;f.evStk=Math.max(f.evStk||0,2/3)});
+  evx(ev,'파티의 속도와 회피율이 2턴간 10% 오른다.',a,'속도 · 회피 UP',{fx:{k:'up',c:'#6fa0dc'},sfx:'up'});return}
  /* 자가재생 */
  if(sk.selfRegen){
   const r=castOnly(a,d,idx,ev,sk);
@@ -190,6 +190,7 @@ endOfTurn=function(ev){
  L.forEach(f=>{
   f.bwNew=false;
   if(f.hp<=0)return;
+  if(f.ladyT>0&&--f.ladyT===0){f.ladySpd=0;if(f.evStk===2/3)f.evStk=f.ladyEvPrev||0}
   if(f.sealT>0&&--f.sealT===0)evx(ev,`${f.ch.name}의 봉인이 풀렸다.`,f,'봉인 해제',{sfx:'up'});
   /* 현무의 힘: 현과 함께 출전한 승아는 매 턴 HP 3% 회복 */
   if(f.ch.id==='seunga'&&partner(f,'hyun')){
