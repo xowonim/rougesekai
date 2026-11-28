@@ -1,7 +1,7 @@
 /* 12차 수정: 경험치/레벨업 표시와 능력치 반영 · 아이템 · 보상 개편 */
 const RCOL={1:'#f2f2f0',2:'#f08fb8',3:'#f2d04a',4:'#e8473f'};
 const OEL={m:['木','#5b96f0','속도'],h:['火','#ee5a4c','공격력'],t:['土','#efcf4a','최대 HP'],g:['金','#ffffff','방어력'],s:['水','#7d8391','명중률']};
-const ORB_AMT=.15,ORB_ACC=10,ORB_STG=5,ORB_MAX=25,GODS=['merhen','otori','amir','samael','anak','jin','jeong'];
+const ORB_AMT=.15,ORB_ACC=10,ORB_STG=5,ORB_MAX=25,GODS=['marchen','otori','amir','samael','anax','jin','jung'];
 const ITEMS={
  bul:{n:'불로초',r:3,d:'부활 · HP 50%',w:5},
  hg1:{n:'수은약',r:1,d:'HP 25% 회복',w:10,pct:.25},
