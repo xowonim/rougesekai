@@ -2,8 +2,7 @@
    설정값
    - MAP_STAGES : 몇 단계마다 지역이 바뀌는지 (N)
    - 지도 이미지  : maps/<지역 id>.png  (없으면 기본 배경색 사용)
-   - 캐릭터 이미지 : chars/icon/<id>.png (작은 아이콘) · chars/full/<id>.png (아카이브 전신) · chars/battle/<id>.png (전투)
-   - 스킬 아이콘 : img/skill/<id>_<1~3>.png / 재료 아이콘 : img/item/<ls|lm|ll|ss|sm|sl>.png
+   - 캐릭터 일러  : chars/<캐릭터 id>.png (없으면 이름 첫 글자 표시)
    ===================================================================== */
 const CFG={MAP_STAGES:10,PARTY_MAX:3,PULL_COST:160,PULL10_COST:1600,LV_MAX:80,SK_MAX:8,BT_MAX:6,START_COIN:480,REGEN:0.15,
  AP_CHAR:{4:5,5:50},AP_PER_COIN:16,AP_DUP:{4:1,5:2,6:3},
@@ -27,7 +26,7 @@ const CH=[
  A('불도깨비','주변의 불도깨비를 투척한다.',55),
  B('시간 조작','과거를 조작해 유리한 미래로 향한다.',30),
  A('공간 조작','어디든 이동해 허점을 찌른다.',65,{ign:.5})]},
-{id:'merhen',name:'메르헨',el:'木',star:5,race:'신',role:'u',sk:[
+{id:'marchen',name:'메르헨',el:'木',star:5,race:'신',role:'u',sk:[
  A('생명의 가루','세피로트 나무의 꽃가루를 분사한다.',45,{drain:true}),
  G('나뭇가지','가지를 꺾어 새 생명을 창조한다.',30),
  H('재생','입김을 불어넣어 수명을 늘린다.',50)]},
@@ -39,7 +38,7 @@ const CH=[
  A('영대','입을 맞춰 상대의 생명력을 흡수한다.',55,{drain:true}),
  A('소멸','검게 변한 손으로 닿은 것을 가루로 만든다.',80,{ign:.6}),
  A('죄악','영혼 심판으로 죄를 부여한다.',25,{dot:9})]},
-{id:'anak',name:'아낙',el:'水',star:5,race:'신',role:'a',sk:[
+{id:'anax',name:'아낙',el:'水',star:5,race:'신',role:'a',sk:[
  A('석화','눈을 떠 마주친 상대를 돌로 만든다.',40,{stun:55}),
  A('봉인','자신의 차원에 상대를 봉인한다.',50,{stun:35}),
  Z('경계','차원의 경계를 넘나들어 공격을 피한다.')]},
@@ -47,7 +46,7 @@ const CH=[
  A('부조화의 기운','부조화의 기운을 투척한다.',65),
  A('부조화의 탄생','부조화를 마물화하여 생성한다.',35,{dot:8}),
  A('부조화의 저주','상대를 어둠 속에 가둔다.',55,{stun:70})]},
-{id:'jeong',name:'정',el:'+',star:6,race:'신',role:'u',sk:[
+{id:'jung',name:'정',el:'+',star:6,race:'신',role:'u',sk:[
  A('조화의 기운','조화의 기운을 투척한다.',55),
  B('동화','육체에 깃들어 힘을 끌어올린다.',35),
  H('조화의 축복','자신의 힘을 극대화해 부조화를 제거한다.',60)]},
@@ -55,7 +54,7 @@ const CH=[
  A('여의주','',35,{acc:100}),
  Z('구름','',{acc:100}),
  A('감전','',55,{acc:100,shock:true})]},
-{id:'hwanhui',name:'주환희',el:'火',star:5,race:'원향족',role:'u',sk:[
+{id:'hwanhee',name:'주환희',el:'火',star:5,race:'원향족',role:'u',sk:[
  A('불도깨비','불도깨비를 잠시 생성해 투척한다.',50),
  H('치유','주작의 힘으로 아주 화끈하게 치유한다.',40),
  W('우주의 소리','우주와 교감해 상대의 허점을 엿듣는다.',20)]},
@@ -143,7 +142,7 @@ const CH=[
 {id:'clorins',name:'클로린스 클라크',el:'木',star:4,race:'인간',role:'u',sk:[
  W('연구','연구 지식으로 상대의 약점을 분석한다.',25),
  H('동물애호가','동물 친구들의 도움을 받는다.',35),
- B('엄청난 사실','숨겼둔 의지를 드러내 힘을 낸다.',35)]},
+ B('엄청난 사실','숨겨둔 의지를 드러내 힘을 낸다.',35)]},
 {id:'shagall',name:'샤갈 로느에프 갈라',el:'水',star:4,race:'인간',role:'m',sk:[
  A('리볼버','인간이 만든 도구로 쏜다.',60),
  W('가스라이팅','나긋나긋한 말로 상대를 설득한다.',30),
@@ -205,7 +204,7 @@ const CH=[
  A('염동력','사물이나 생물을 자유자재로 움직인다.',35,{stun:45}),
  A('집행','두 눈에 규율을 불러내 집행한다.',110,{selfStun:true})]},
 {id:'aledeia',name:'알레데이아',el:'？',star:5,race:'신',role:'m',sk:[
- A('염탑','생명체의 몸 속에 깃들어 염탑한다.',40),
+ A('염탐','생명체의 몸 속에 깃들어 염탐한다.',40),
  A('조종','생명체의 몸 속에 깃들어 조종한다.',35,{stun:45}),
  A('조화는 곧 부조화','진리를 환각화하며 중독시킨다.',30,{dot:8})]},
 {id:'sasin_cheong',name:'청룡',el:'木',star:4,race:'사신',role:'t',sk:[
@@ -237,8 +236,8 @@ const BASIC={n:'저항',t:'a',p:30,d:''};
 
 /* ---------- 지역 ---------- */
 const MAPS=[
- {id:'iwonhyang',name:'이원향',g:['#4a2530','#1a1018'],pool:['hwanhui','baekdo','ganghyeon'],boss:'seungah'},
- {id:'sephirot',name:'세피로트 나무',g:['#2c5a45','#101c18'],pool:['anemone','esquel'],boss:'merhen'},
+ {id:'iwonhyang',name:'이원향',g:['#4a2530','#1a1018'],pool:['hwanhee','baekdo','ganghyeon'],boss:'seungah'},
+ {id:'sephirot',name:'세피로트 나무',g:['#2c5a45','#101c18'],pool:['anemone','esquel'],boss:'marchen'},
  {id:'yermo',name:'예르모',g:['#3e5a2a','#121a10'],pool:['berdi','oscar','yormungand','hati'],boss:'jarel'},
  {id:'aram',name:'아람',g:['#6a2828','#1e0e0e'],pool:['hongryeon','jiyong','jaehee'],boss:'haekyung'},
  {id:'liben',name:'리벤 카르마',g:['#5a3a2a','#1a1210'],pool:['cellin','clorins'],boss:'trump'},
