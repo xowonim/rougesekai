@@ -8,7 +8,7 @@ const pk=()=>{try{(run.party||[]).forEach(f=>{if(f.permaKO&&f.hp>0){f.hp=0;f.bkW
 /* ---------- 스킬 데이터 ---------- */
 CHM.kerma.sk=[
  A('차크람','차크람으로 전투에 임한다. 2회 연속으로 공격한다.',30,{acc:90,multi:[2,2],kn:'단일 연속 공격'}),
- A('누르','빛을 무기화해 쏘다. 상대의 부조화가 20% 줄어든다.',90,{acc:100,mp:18,disCut:20,kn:'단일 공격'}),
+ A('누르','빛을 무기화해 쏜다. 상대의 부조화가 20% 줄어든다.',90,{acc:100,mp:18,disCut:20,kn:'단일 공격'}),
  A('틴들','능력치를 극단적으로 끌어올려 행동하지 못하게 한다. 상대의 부조화가 50% 줄어든다.',120,{acc:100,stun:100,mp:28,disCut:50,kn:'단일 공격'})];
 CHM.astel.sk=[
  A('철퇴','철퇴로 내려친다.',55,{acc:65,kn:'단일 공격'}),
@@ -20,7 +20,7 @@ if(!CHM.hannah){
  const h={id:'hannah',name:'하나 나이틀리',el:'水',star:4,race:'인간',role:'m',sk:[
   A('서리 얼음','서리가 낀 얼음을 던진다. 서리를 1개 얻는다. MP를 소모한다.',35,{acc:95,mp:4,frost:1,kn:'단일 공격'}),
   W('따뜻한 포옹','따뜻하게 안아 상대의 몸에 얼음 결정을 1개 만든다. 서리 3개를 소모한다. 얼음 결정 1개당 공격력 · 속도가 20% 떨어지고, 3개가 쌓이면 전투불능이 되어 이번 게임에서 되살아날 수 없다.',0,{acc:100,hug:1,mp:0,kn:'타인 변화'}),
-  A('눈보라','눈보라를 일으켜 얼려 버린다. 상대는 빙결 상태가 된다. 더블 배틀에서는 하나를 제외한 모두가 휘쓸린다.',90,{acc:100,sc:'범위',frz:100,snowAll:1,mp:20,kn:'범위 공격'})]};
+  A('눈보라','눈보라를 일으켜 얼려 버린다. 상대는 빙결 상태가 된다. 더블 배틀에서는 하나를 제외한 모두가 휘말린다.',90,{acc:100,sc:'범위',frz:100,snowAll:1,mp:20,kn:'범위 공격'})]};
  CH.push(h);CHM.hannah=h;
  const m=MAPS.find(x=>x.id==='liben');if(m&&!m.pool.includes('hannah'))m.pool.push('hannah')}
 Object.assign(PROF,{
@@ -108,7 +108,7 @@ function body(a,d,idx,ev){
   evx(ev,`${d.ch.name} 부조화 ${d.dis}%`,d,'부조화 -'+(b-d.dis)+'%',{fx:{k:'up',c:'#8fd0b0'},sfx:'up'})}
  if(sk.frz&&landed&&d.hp>0&&!d.frz&&Math.random()*100<sk.frz){
   d.frz=1;d.frzAge=0;
-  evx(ev,`${josa(d.ch.name,'은/는')} 꼭꼭 얼어붙었다.`,d,'빙결',{fx:{k:'down',c:'#9ad0f0'},sfx:'down'})}}
+  evx(ev,`${josa(d.ch.name,'은/는')} 꽁꽁 얼어붙었다.`,d,'빙결',{fx:{k:'down',c:'#9ad0f0'},sfx:'down'})}}
 perform=function(a,d,idx,ev){
  const prev=MC29;MC29=a;
  try{
