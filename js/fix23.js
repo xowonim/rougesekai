@@ -93,7 +93,7 @@ nextBattle=function(){
  if(w>=DBL.from&&w%CFG.MAP_STAGES!==0&&alive>=1&&!run.invite&&Math.random()<DBL.rate)run.dbl=true;
  _nb23()};
 
-const GODIDS=['anak','otori','merhen','amir','samael','jin','jeong','aledeia'];
+const GODIDS=['anax','otori','marchen','amir','samael','jin','jung','aledeia'];
 function dMakeFoe2(){
  const first=run.enemy.ch.id,met=run.metAnak;let e=null;
  for(let n=0;n<10;n++){const c=makeEnemy(run.wave);e=c;
