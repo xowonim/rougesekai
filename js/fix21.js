@@ -72,4 +72,4 @@ startRun=function(ids){sfx('start');_sr21(ids)};
  document.head.appendChild(st)})();
 
 /* 살구 카드 등장 빈도 낮춤 */
-ITEMS.apr.w=1;
+ITEMS.apr.w=.2;
