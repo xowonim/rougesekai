@@ -1,4 +1,4 @@
-/* 34차 수정: 더블 배틀 대상 선택 안내를 눈에 띄게 (누가 · 누구를, 취소 버튼, 대상 표시) */
+/* 34차 수정: 더블 배틀 대상 선택 표시 (대상 위 화살표, 취소 버튼) */
 (function(){
 const s=document.createElement('style');
 s.textContent=`.dtgw{display:flex;align-items:center;justify-content:center;gap:1.6em;width:100%}
@@ -12,8 +12,7 @@ paintMenu=function(){
  _pm34();
  try{
   if(!(run&&run.dbl&&run.phase==='menu'&&run.dcmd&&run.dtgt))return;
-  const c=run.dcmd,slot=c.slots[c.k],F=slot===1?dB():dA(),ally=run.dtgt.kind==='ally1';
   const el=document.getElementById('cards');if(!el)return;
-  el.innerHTML=`<div class="dtgw"><div class="dtp"><b>${F.ch.name}</b>의 ${ally?'대상':'공격 대상'}을 선택하세요<i>${c.k+1} / ${c.slots.length}</i></div><button class="tb" onclick="dblBack()">취소</button></div>`;
+  el.innerHTML='<div class="dtgw"><button class="tb" onclick="dblBack()">취소</button></div>';
  }catch(e){}};
 })();

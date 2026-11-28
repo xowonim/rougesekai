@@ -31,12 +31,8 @@ REG.sephirot.next=[['glisha',33],['iwonhyang',33],['badr',33],['tamaki',1]];
 REG.badr.next=[['glisha',50],['sephirot',50]];
 REG.anak.next=[['sephirot',100]];
 
-/* ---------- 안내 문구 ---------- */
-REG.iwonhyang.tip='눈이 내린다. 턴마다 전체 HP의 3%를 잃는다.';
-REG.glisha.tip='무더운 날씨. 전체 공격력이 30% 오르고, 낙뢰가 떨어질 수 있다.';
-REG.sephirot.tip='턴마다 전체 HP가 1% 회복된다.';
-REG.badr.tip='안개가 낀다. 전체 회피율 10%, 공격력 10% 상승. 모든 공격에 방어무시 10%가 붙는다.';
-REG.anak.tip='타마키 오토리, 강 현, 강승아의 ③ 스킬을 쓸 수 없다.';
+/* ---------- 안내 문구는 표시하지 않는다 ---------- */
+Object.keys(REG).forEach(k=>{REG[k].tip=''});
 
 /* ---------- 보스 스테이지는 보스 목록에서 선택 ---------- */
 const _pe31=pickEnemy;
@@ -54,7 +50,7 @@ const _st31=st;
 st=function(f,k){
  let v=_st31(f,k);
  if(k==='atk'){if(rg()==='glisha')v*=1.3;else if(rg()==='badr')v*=1.1}
- /* 아낙의 고유차원: 예전의 공격 · 방어 10% 감소는 없앴다 */
+ /* 아낙의 고유차원: 예전의 공격 · 방어 10% 감소는 없앤다 */
  if(f.side==='p'&&rg()==='anak'&&(k==='atk'||k==='def'))v/=.9;
  return v};
 const _hc31=hitCalc;

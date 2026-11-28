@@ -8,17 +8,17 @@ s.textContent=`#bmsg{position:absolute;inset:0;z-index:90;cursor:pointer}
 document.head.appendChild(s);
 
 /* ---------- 문구 변환 ---------- */
-const SKIP=[/^.+에게 \d+ 피해$/,/^.+ HP \d+ (회복|흡수|소모)/,/^.+ 반동 \d+$/];
 function disp(e){
  let t=e.t;if(typeof t!=='string'||!t)return '';
  if(e.act&&e.act.n&&t.endsWith('의 '+e.act.n)){
   const nm=t.slice(0,t.length-e.act.n.length-2);
   return `${josa(nm,'은/는')} ${josa(e.act.n,'을/를')} 사용했다!`}
- const m=/^(.*[은는]) (?:돌로 굳어 |얼어붙어 )?움직이지 못한다\.?$/.exec(t);
+ let m=/^(.*[은는]) (?:돌로 굳어 |얼어붙어 )?움직이지 못한다\.?$/.exec(t);
  if(m)return `${m[1]} 움직일 수 없었다!`;
+ m=/^(.+)의 .+은\(는\) 봉인되어 쓸 수 없다\.$/.exec(t);
+ if(m)return `${josa(m[1],'은/는')} 움직일 수 없었다!`;
  if(/^.+에게 \d+ 피해 · 치명타$/.test(t))return '급소에 맞았다!';
- if(SKIP.some(r=>r.test(t)))return '';
- return t}
+ return ''}
 
 /* 마지막 한 명이 쓰러질 때는 기존 문구를 그대로 두고, 나머지는 "쓰러졌다!"로 */
 function prep(ev){
@@ -27,9 +27,11 @@ function prep(ev){
  let lp=-1,le=-1;
  ev.forEach((e,i)=>{if(typeof e.t!=='string')return;if(/쓰러졌다\.$/.test(e.t))lp=i;else if(/[을를] 쓰러뜨렸다\.$/.test(e.t))le=i});
  ev.forEach((e,i)=>{if(typeof e.t!=='string'||e.disp!==undefined)return;
-  if(/쓰러졌다\.$/.test(e.t)&&!(pAll&&i===lp))e.disp=e.t.replace(/쓰러졌다\.$/,'쓰러졌다!');
-  else if(run.dbl&&/[을를] 쓰러뜨렸다\.$/.test(e.t)&&!(eAll&&i===le)){
-   const nm=e.t.replace(/[을를] 쓰러뜨렸다\.$/,'');e.disp=`${josa(nm,'은/는')} 쓰러졌다!`}})}
+  if(/속도 상승 \(\d+단계\)/.test(e.t)){e.disp='';e.pop=null;e.fx=null;return}
+  if(/쓰러졌다\.$/.test(e.t))e.disp=(pAll&&i===lp)?'':e.t.replace(/쓰러졌다\.$/,'쓰러졌다!');
+  else if(/[을를] 쓰러뜨렸다\.$/.test(e.t)){
+   if(!run.dbl||(eAll&&i===le))e.disp='';
+   else{const nm=e.t.replace(/[을를] 쓰러뜨렸다\.$/,'');e.disp=`${josa(nm,'은/는')} 쓰러졌다!`}}})}
 
 /* ---------- 재생 ---------- */
 let BM=null;
@@ -52,9 +54,9 @@ playEvents=function(ev,done){
   let t='';try{t=e.disp!==undefined?e.disp:disp(e)}catch(err){}
   if(t)msg(t);
   if(e.act)showAct(e.act);if(e.lunge)lunge(e.lunge);if(e.fx)playFx(e.fx);if(e.shake)shake();if(e.sfx)sfx(e.sfx);
-  /* 문구가 있는 줄은 클릭해야 다음으로 넘어간다 */
-  if(t)return;
-  timer=setTimeout(step,e.d||((e.pop||e.fx)?700:450))};
+  /* 문구는 읽을 수 있게 천천히 자동으로 넘어간다 (클릭하면 바로 다음으로) */
+  const d=e.d||((e.pop||e.fx)?700:450);
+  timer=setTimeout(step,t?Math.max(d,/쓰러졌다!/.test(t)?1700:1500):d)};
  BM=step;skipFn=step;step()};
 
 /* ---------- 더블 배틀: 마지막으로 쓰러진 적 기록 ---------- */
