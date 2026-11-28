@@ -65,10 +65,12 @@ dblTurn=function(acts){
 /* ---------- CPU 대사: 이긴 쪽은 마지막에 남은 캐릭터, 진 쪽은 마지막에 쓰러진 캐릭터 ---------- */
 const _wb35=winBattle;
 winBattle=function(){_wb35.apply(this,arguments);
- try{if(run&&run.pend&&run.dbl&&run.lastFoe&&DLG[run.lastFoe])run.pend.id=run.lastFoe}catch(err){}};
+ try{if(run&&run.pend&&run.dbl&&run.lastFoe){
+  if(DLG[run.lastFoe])run.pend.id=run.lastFoe;else run.pend=null}
+  if(run)run.lastFoe=null}catch(err){}};
 const _lr35=loseRun;
 loseRun=function(){
  const alive=(run&&run.dbl)?dFoes().find(f=>f.hp>0):null;
  _lr35.apply(this,arguments);
- try{if(run&&alive&&DLG[alive.ch.id])run.pend={k:'lose',id:alive.ch.id}}catch(err){}};
+ try{if(run&&alive){if(DLG[alive.ch.id])run.pend={k:'lose',id:alive.ch.id};else run.pend=null}}catch(err){}};
 })();
