@@ -106,7 +106,7 @@ function rewardUse(id,i){const f=run.party[i],m=ITEMS[id];
  $('ovl').innerHTML='';finishReward()}
 function rewardMap(){
  const b=Math.floor((run.wave-1)/CFG.MAP_STAGES)+1;
- $('ovl').innerHTML=`<div class="ov"><div class="qbox"><div class="qt">지도</div><div class="mapl">${['tamaki','iwonhyang','sephirot','badr','glisha'].map(id=>`<button class="tb" onclick="rewardMapGo('${id}',${b})">${REG[id].name}</button>`).join('')}</div></div></div>`}
+ $('ovl').innerHTML=`<div class="ov"><div class="qbox"><div class="qt">지도</div><div class="mapl">${(typeof mapList==='function'?mapList(b):['tamaki','iwonhyang','sephirot','badr','glisha']).map(id=>`<button class="tb" onclick="rewardMapGo('${id}',${b})">${REG[id].name}</button>`).join('')}</div></div></div>`}
 function rewardMapGo(id,b){ensureRegion(b);run.regions[b]=id;$('ovl').innerHTML='';finishReward()}
 pickReward=function(i){
  const c=run.cards[i];if(!c)return;const id=c.id,it=ITEMS[id];
