@@ -5,12 +5,13 @@ CHM.ruihu=CHM.luihu;
 /* 혼돈: 이미지·저장 ID를 chaos로 변경 (예전 ID honton은 별칭으로 유지) */
 (function(){const c=CHM.honton;if(!c)return;c.id='chaos';CHM.chaos=c;
  MAPS.forEach(m=>{m.pool=m.pool.map(x=>x==='honton'?'chaos':x);if(m.boss==='honton')m.boss='chaos'})})();
-(function(){const KEY='kamisekai_rogue_v2',ALIAS={luihu:'ruihu',honton:'chaos'};
+(function(){const KEY='kamisekai_rogue_v2',ALIAS={luihu:'ruihu',honton:'chaos',merhen:'marchen',anak:'anax',hwanhui:'hwanhee',jeong:'jung'};
  try{const raw=localStorage.getItem(KEY);if(!raw)return;
   const o=JSON.parse(raw);if(!o||typeof o!=='object')return;
   try{const b=JSON.parse(localStorage.getItem(KEY+'_bak')||'null'),n=x=>x&&x.chars?Object.keys(x.chars).length+Object.keys(x.hold||{}).length:0;
    if(n(o)>=n(b))localStorage.setItem(KEY+'_bak',raw)}catch(e){}
   o.chars=o.chars||{};o.hold=o.hold||{};o.holdParty=o.holdParty||[];o.party=o.party||[];
+  const known=id=>!!CHM[id]&&id!==ALIAS[id]&&!Object.keys(ALIAS).includes(id);
   const fix=id=>ALIAS[id]||id;
   for(const id of Object.keys(o.chars)){const nid=fix(id);if(nid!==id){o.chars[nid]=o.chars[nid]||o.chars[id];delete o.chars[id]}}
   o.party=o.party.map(fix);
