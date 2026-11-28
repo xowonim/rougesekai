@@ -41,7 +41,7 @@ function msg(t){
   d=document.createElement('div');d.id='bmsg';
   d.addEventListener('click',ev=>{ev.stopPropagation();if(typeof sfx==='function')sfx('tap');if(BM)BM()});
   g.appendChild(d)}
- d.innerHTML='<div class="dbox"><div class="dt"></div><i class="dh"></i></div>';
+ d.innerHTML='<div class="dbox"><div class="dt"></div></div>';
  d.querySelector('.dt').textContent=t}
 const unmsg=()=>{const d=document.getElementById('bmsg');if(d)d.remove()};
 playEvents=function(ev,done){

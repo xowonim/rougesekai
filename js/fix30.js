@@ -11,7 +11,7 @@ Object.assign(SVGP,{
  ckb:'<path d="M6 11h12v9H6zM9 11V8a3 3 0 0 1 6 0v3"/>',
  invc:'<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6zM9 12l2 2 4-4"/>'});
 ['ckb','invc'].forEach(k=>{if(!ICKEYS.includes(k))ICKEYS.push(k);STICON[k]=k});
-const pill=(k,n)=>{if(k==='brand')return `<span class="eyes">${EYE.repeat(Math.max(1,Math.min(7,n|0||1)))}</span>`;const p=PL[k];return `<span class="sp" style="--c:${p[1]}">${p[0]}</span>`};
+const pill=(k,n)=>{if(k==='buff')return '';if(k==='brand')return `<span class="eyes">${EYE.repeat(Math.max(1,Math.min(7,n|0||1)))}</span>`;const p=PL[k];return `<span class="sp" style="--c:${p[1]}">${p[0]}</span>`};
 function pillize(h,n){
  if(!h||h.indexOf('<svg')<0)return h;
  const rev=new Map();Object.keys(SVGP).forEach(k=>{if(PL[k]&&!rev.has(SVGP[k]))rev.set(SVGP[k],k)});
