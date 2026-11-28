@@ -35,7 +35,7 @@ CHM.anax.sk=[
 CHM.jin.sk=[
  A('부조화의 기운','부조화의 기운을 투척한다. 필드의 모두에게 부조화 10%가 쌓인다.',50,{acc:95,disAll:10}),
  A('참화','부조화를 마물화해 생성한다. 3회 연속 공격하고 필드의 모두에게 부조화 15%가 쌓인다.',30,{acc:85,sc:'범위',multi:[3,3],disAll:15}),
- A('부조화의 저주','자신의 부조화를 50% 소모한다. 5턴간 상대에게 지속 피해 5%, 필드의 모두에게 매 턴 부조화 6%.',70,{acc:100,sc:'범위',needDis:1,curse:1,kn:'필드 변화'})];
+ A('부조화의 저주','자신의 부조화를 70% 소모한다. 5턴간 상대에게 지속 피해 5%, 매 턴 부조화가 쌓인다. (자신 3%, 나머지 6%)',70,{acc:100,sc:'범위',needDis:1,curse:1,kn:'필드 변화'})];
 CHM.cheonryong.sk=[
  A('여의주','여의주를 검으로 만들어 벤다.',35,{acc:100}),
  Z('구름','여의주의 힘으로 구름을 만들어 잠시 날아오른다. 공격을 피한다.',{acc:100}),
@@ -58,7 +58,7 @@ const evx=(ev,t,f,v,o)=>{o=o||{};ev.push({t,s:snap(),raw:true,pop:v!==undefined?
 const fieldAll=(a,d)=>run.dbl?[...dAllies(),...dFoes()]:[a,d].filter(Boolean);
 const foesOf=(a,d)=>run.dbl?(a.side==='p'?dFoes():dAllies()):[d];
 const fighters=()=>[...new Set([...(run.party||[]),run.enemy,run.enemy2,run.eA].filter(Boolean))];
-const SKEYS=['mp','stun','stunImm','shock','shockT','dot','psn','conf','confAge','seal','sealAge','love','loveAge','d','dT','m','mT','dbStk','slowStk','slowT','spdStk','spdT','spdB','spdBT','evStk','inv','evade','brand','dis','rage','rageAge','sloth','slothAge','petri','petriAge','petriSlow','defStk','stk','rest','pend','dive','regenT','ignT','ignP','curseT','curseDisT','last'];
+const SKEYS=['mp','stun','stunImm','shock','shockT','dot','psn','conf','confAge','seal','sealAge','love','loveAge','d','dT','m','mT','dbStk','slowStk','slowT','spdStk','spdT','spdB','spdBT','evStk','inv','evade','brand','dis','rage','rageAge','sloth','slothAge','petri','petriAge','petriSlow','defStk','stk','rest','pend','dive','regenT','ignT','ignP','curseT','curseDisT','curseDisP','last'];
 const snapAll=()=>fighters().map(f=>{const o={f,hp:f.hp};SKEYS.forEach(k=>{o[k]=f[k]===undefined?undefined:structuredClone(f[k])});return o});
 const restoreOne=(f,o)=>{f.hp=o.hp;SKEYS.forEach(k=>{if(o[k]!==undefined)f[k]=structuredClone(o[k])})};
 
@@ -101,7 +101,7 @@ const _rbs26=resetBattleState;
 resetBattleState=function(f){
  const kp=f.side==='p'?{b:f.brand||0,d:f.dis||0}:null;
  _rbs26(f);
- f.rage=0;f.rageAge=0;f.sloth=0;f.slothAge=0;f.petri=0;f.petriAge=0;f.petriSlow=0;f.defStk=0;f.ignT=0;f.ignP=0;f.regenT=0;f.bkUsed=0;f.bkWin=0;f.curseT=0;f.curseDisT=0;
+ f.rage=0;f.rageAge=0;f.sloth=0;f.slothAge=0;f.petri=0;f.petriAge=0;f.petriSlow=0;f.defStk=0;f.ignT=0;f.ignP=0;f.regenT=0;f.bkUsed=0;f.bkWin=0;f.curseT=0;f.curseDisT=0;f.curseDisP=0;
  f.brand=kp?kp.b:0;f.dis=kp?kp.d:0};
 const _st26=st;
 st=function(f,k){let v=_st26(f,k);
@@ -124,7 +124,7 @@ mpCost=function(s,i){
  if(s){
   const F=MCF||(run&&run.party&&run.party[run.active]);
   if(s.needBrand&&!(run&&run.brandKO))return 9999;
-  if(s.needDis)return(F&&(F.dis||0)>=50)?0:9999;
+  if(s.needDis)return(F&&(F.dis||0)>=70)?0:9999;
   if(s.bkUlt)return(F&&F.bkWin>0)?0:9999;
   if(s.bkLock&&F&&F.bkWin>0)return 9999;
   if(s.aiCond&&MCF&&MCF.side==='e'&&!s.aiCond(MCF))return 9999}
@@ -135,7 +135,7 @@ skFace=function(ch,i,s,lv,tag,mp){
  if(!mp||!s)return h;
  if(ch.id==='samael'&&i>=0){const c=mpCost(s,i);h=h.replace(/MP \d+/,'HP '+(Math.round(c*.7*10)/10)+'%')}
  else if(s.hpPct)h=h.replace(/MP \d+/,'HP '+s.hpPct+'%');
- else if(s.needDis)h=h.replace(/MP \d+/,'부조화 50%');
+ else if(s.needDis)h=h.replace(/MP \d+/,'부조화 70%');
  else if(s.needBrand&&!(run&&run.brandKO))h=h.replace(/MP \d+/,'조건 미달성');
  else if(s.bkUlt)h=h.replace(/MP \d+/,'백호의 힘');
  return h};
@@ -227,11 +227,11 @@ function body(a,d,idx,ev){
  if(sk.defDn2&&cast&&!fail&&d.hp>0){d.d.def=Math.max(d.d.def,sk.defDn2);d.dT=2;evx(ev,`${d.ch.name} 방어력 하락`,d,'방어력 DOWN',{fx:{k:'down',c:'#ad8fd8'},sfx:'down'})}
  if(sk.disAll&&landed&&once)fieldAll(a,d).forEach(f=>addDis(f,sk.disAll,ev));
  if(sk.curse&&cast&&landed&&once){
-  a.dis=Math.max(0,(a.dis||0)-50);
-  evx(ev,`${a.ch.name} 부조화 ${a.dis}%`,a,'부조화 -50%',{sfx:'up'});
+  a.dis=Math.max(0,(a.dis||0)-70);
+  evx(ev,`${a.ch.name} 부조화 ${a.dis}%`,a,'부조화 -70%',{sfx:'up'});
   const foes=foesOf(a,d);
-  fieldAll(a,d).forEach(f=>{f.curseDisT=5;if(foes.includes(f))f.curseT=5});
-  evx(ev,'저주가 필드를 뒤덮는다. 5턴간 상대는 지속 피해를 입고, 모두의 부조화가 쌓인다.',a,'저주',{fx:{k:'down',c:'#8a6fb8'},sfx:'down',d:900})}
+  fieldAll(a,d).forEach(f=>{f.curseDisT=5;f.curseDisP=(f===a)?3:6;if(foes.includes(f))f.curseT=5});
+  evx(ev,'저주가 필드를 뒤덮는다. 5턴간 상대는 지속 피해를 입고, 부조화가 쌓인다.',a,'저주',{fx:{k:'down',c:'#8a6fb8'},sfx:'down',d:900})}
  if(sk.reverse&&cast&&once){
   const field=fieldAll(a,d);field.forEach(reverseStats);
   evx(ev,'엔네아드의 기적. 출전한 모두의 능력 변화가 뒤집혔다.',a,'능력 반전',{fx:{k:'up',c:'#e0b84a'},sfx:'up',d:900})}
@@ -285,7 +285,7 @@ endOfTurn=function(ev){
    const v=Math.max(1,Math.round(f.maxhp*.05));f.hp=Math.max(0,f.hp-v);
    evx(ev,`${f.ch.name} 저주 피해 ${v}`,f,'-'+v,{cls:'dot',sfx:'hit'});f.curseT--;
    if(f.hp<=0)evx(ev,`${josa(f.ch.name,'은/는')} 쓰러졌다.`,f,undefined,{sfx:'ko'})}
-  if(f.curseDisT>0&&f.hp>0){f.curseDisT--;addDis(f,6,ev)}
+  if(f.curseDisT>0&&f.hp>0){f.curseDisT--;addDis(f,f.curseDisP||6,ev)}
   if(f.regenT>0&&f.hp>0){
    const g=Math.round(f.maxhp*.03),b=f.hp;f.hp=Math.min(f.maxhp,f.hp+g);f.regenT--;
    if(f.hp>b)evx(ev,`${f.ch.name} HP ${f.hp-b} 회복`,f,'+'+(f.hp-b),{cls:'heal',fx:{k:'heal'},sfx:'heal'})}
