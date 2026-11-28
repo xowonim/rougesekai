@@ -90,7 +90,7 @@ const _nb23=nextBattle;
 nextBattle=function(){
  run.dbl=false;run.enemy2=null;run.eA=null;run.pB=-1;run.dsel=null;run.dcmd=null;run.dtgt=null;
  const w=run.wave,alive=run.party.filter(f=>f.hp>0).length;
- if(w>=DBL.from&&w%CFG.MAP_STAGES!==0&&alive>=2&&!run.invite&&Math.random()<DBL.rate)run.dbl=true;
+ if(w>=DBL.from&&w%CFG.MAP_STAGES!==0&&alive>=1&&!run.invite&&Math.random()<DBL.rate)run.dbl=true;
  _nb23()};
 
 const GODIDS=['anak','otori','merhen','amir','samael','jin','jeong','aledeia'];
