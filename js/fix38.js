@@ -1,7 +1,7 @@
 /* 38차 수정: HP · MP 숫자를 막대 옆으로, 레벨 · 공방속 글씨 축소, 공방속은 한 줄씩 */
 (function(){
 const s=document.createElement('style');
-s.textContent='.hn{display:none}.brow{display:flex;align-items:center;gap:.35em;margin-top:.35em}.brow.mr{margin-top:.2em}.brow .hpl,.brow .mpl{flex:1;margin-top:0}.bn{font-size:.58em;white-space:nowrap;min-width:3.9em;text-align:right;font-variant-numeric:tabular-nums}.who span:last-child{font-size:.62em}.stm{flex-direction:column;align-items:flex-end;flex-wrap:nowrap;gap:0;font-size:.6em;line-height:1.45}.stm i{margin-left:.4em}';
+s.textContent='.hn{display:none}.brow{display:flex;align-items:center;gap:.35em;margin-top:.35em}.brow.mr{margin-top:.2em}.brow .hpl,.brow .mpl{flex:1;margin-top:0}.bn{font-size:.58em;white-space:nowrap;min-width:3.9em;text-align:right;font-variant-numeric:tabular-nums}.who span:last-child{font-size:.62em}.stm{flex-direction:column;align-items:flex-start;flex-wrap:nowrap;gap:0;font-size:.6em;line-height:1.45}.stm i{margin-left:.4em}';
 document.head.appendChild(s);
 const _pi38=paintInfo;
 paintInfo=function(s,fl,popv){_pi38(s,fl,popv);

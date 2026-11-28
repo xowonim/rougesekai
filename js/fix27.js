@@ -38,10 +38,10 @@ const fighters=()=>[...new Set([...(run.party||[]),run.enemy,run.enemy2,run.eA].
 const team=f=>run.dbl?(f.side==='p'?dAllies():dFoes()):(f.side==='p'?run.party.filter(x=>x.hp>0):[f]);
 const partner=(f,id)=>!!(run&&run.dbl&&(f.side==='p'?dAllies():dFoes()).some(x=>x!==f&&x.hp>0&&x.ch.id===id));
 const isBwSk=f=>f&&f.hp>0&&f.pend!==null&&f.pend!==undefined&&f.ch.sk[f.pend]&&f.ch.sk[f.pend].bw;
-function releaseBw(ev,f,txt){
+function releaseBw(ev,f,txt,keep){
  if(!run.bw)return;
  run.bw=false;
- fighters().forEach(x=>{if(isBwSk(x))x.pend=null});
+ if(!keep)fighters().forEach(x=>{if(isBwSk(x))x.pend=null});
  evx(ev,txt||'시간이 다시 흐른다. 흑백 필드가 해제되었다.',f,'필드 해제',{fx:{k:'up',c:'#e6e6e6'},sfx:'up',d:700})}
 const INF={
  sloth:d=>d.sloth?null:(d.sloth=1,d.slothAge=0,[`${josa(d.ch.name,'은/는')} 나태해졌다. 속도가 떨어진다.`,'나태','#9aa0b0']),
@@ -112,7 +112,7 @@ function body(a,d,idx,ev){
   if(run.areaSub){if(a.bwNew)return;return _perf27(a,d,idx,ev)}
   if(pendNow&&!a.bwNew&&a.bwWait>0){a.bwWait--;return}
   if(pendNow&&!a.bwNew){
-   a.pend=null;releaseBw(ev,a);
+   a.pend=null;releaseBw(ev,a,undefined,true);
    const m=a.mp;_perf27(a,d,idx,ev);a.mp=m;const l=a.last;
    /* 더블배틀: 두 번째 턴은 단일 대상으로 들어오므로 나머지 상대에게도 직접 공격한다 */
    if(run.dbl){

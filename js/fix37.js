@@ -2,7 +2,7 @@
 (function(){
 const CS={atk:['공격','#e8963a'],def:['방어','#5ab8e8'],spd:['속도','#9bd84a']},DN='#e24a4a';
 const s=document.createElement('style');
-s.textContent='.stt:empty{display:none}.stm{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:.1em .9em;font-size:.8em;line-height:1.5;min-height:0}.stm:empty{display:none}.stm span{white-space:nowrap}.stm i{font-style:normal;letter-spacing:-.05em;margin-left:.3em}.cb .stm{margin-top:.2em}';
+s.textContent='.stt:empty{display:none}.stm{display:flex;justify-content:flex-start;flex-wrap:wrap;gap:.1em .9em;font-size:.8em;line-height:1.5;min-height:0}.stm:empty{display:none}.stm span{white-space:nowrap}.stm i{font-style:normal;letter-spacing:-.05em;margin-left:.3em}.cb .stm{margin-top:.2em}';
 document.head.appendChild(s);
 function pct(f,k){
  try{
