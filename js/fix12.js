@@ -115,7 +115,7 @@ nextBattle=function(){
  if(w>1&&(w-1)%CFG.MAP_STAGES===0&&(IT().map||0)>0&&run.mapAsked!==b){
   run.mapAsked=b;ensureRegion(b);
   window.__mapGo=function(id){$('ovl').innerHTML='';if(id){IT().map--;run.regions[b]=id}_nb12()};
-  $('ovl').innerHTML=`<div class="ov" onclick="__mapGo(null)"><div class="qbox" onclick="event.stopPropagation()"><div class="qt">지도</div><div class="mapl">${['tamaki','iwonhyang','sephirot','badr','glisha'].map(id=>`<button class="tb" onclick="__mapGo('${id}')">${REG[id].name}</button>`).join('')}</div></div></div>`;
+  $('ovl').innerHTML=`<div class="ov" onclick="__mapGo(null)"><div class="qbox" onclick="event.stopPropagation()"><div class="qt">지도</div><div class="mapl">${(typeof mapList==='function'?mapList(b):['tamaki','iwonhyang','sephirot','badr','glisha']).map(id=>`<button class="tb" onclick="__mapGo('${id}')">${REG[id].name}</button>`).join('')}</div></div></div>`;
   return}
  _nb12()};
 
