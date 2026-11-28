@@ -1,4 +1,4 @@
-/* 가챠 연출: 가는 선이 모였다 퍼지는 연출 + 결과 칸 순차 등장 */
+/* 가챠 연출: 가는 선이 모였다가 퍼지는 연출 + 결과 칸 순차 등장 */
 const GC={3:'#f2f2f0',4:'#f08fb8',5:'#f2d04a',6:'#e8473f'};
 (function(){const st=document.createElement('style');st.textContent=`
 #gcv{position:absolute;inset:0;width:100%;height:100%}

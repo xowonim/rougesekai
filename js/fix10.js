@@ -9,8 +9,8 @@ calcStats=function(ch,lv,bt){const s=_calc10(ch,lv,bt),x=GOD_X[ch.id];
 
 /* ---------- 말풍선: 수련의 서 · 오행의 기운 ---------- */
 const BKTXT={
- l:['타마키 신사 어딥가에 보관되어 있는 서적.<br>이 서적을 통해 캐릭터는 더욱 강해질 수 있다.','이 세상에는 각자의 위치라는 게 있어.','그러니까 그 경계를 함부로 침범하려고 하지마.'],
- s:['\'오덕\'이 형상화되어 있는 기운.<br>이 기운을 통해 캐릭터는 자신의 오덕을 단련할 수 있다.','근원을 잊어버린 자는 데질만 남은 것과 같아.','너의 중심에는 무엇이 남아있지?']};
+ l:['타마키 신사 어딘가에 보관되어 있는 서적.<br>이 서적을 통해 캐릭터는 더욱 강해질 수 있다.','이 세상에는 각자의 위치라는 게 있어.','그러니까 그 경계를 함부로 침범하려고 하지마.'],
+ s:['\'오덕\'이 형상화되어 있는 기운.<br>이 기운을 통해 캐릭터는 자신의 오덕을 단련할 수 있다.','근원을 잊어버린 자는 껍질만 남은 것과 같아.','너의 중심에는 무엇이 남아있지?']};
 const BKN={s:0,m:1,l:2};
 (function(){const st=document.createElement('style');st.textContent=`
 .bkb{position:absolute;z-index:20;width:22em;max-width:80%;background:var(--pan);border:1px solid var(--fg);padding:.8em 1em;font-size:.8em;line-height:1.6;transform:translate(-50%,-100%);pointer-events:none}
