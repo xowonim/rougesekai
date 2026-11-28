@@ -56,7 +56,7 @@ playEvents=function(ev,done){
   if(e.act)showAct(e.act);if(e.lunge)lunge(e.lunge);if(e.fx)playFx(e.fx);if(e.shake)shake();if(e.sfx)sfx(e.sfx);
   /* 문구는 읽을 수 있게 천천히 자동으로 넘어간다 (클릭하면 바로 다음으로) */
   const d=e.d||((e.pop||e.fx)?700:450);
-  timer=setTimeout(step,t?Math.max(d,/쓰러졌다!/.test(t)?1700:1500):d)};
+  timer=setTimeout(step,t?Math.max(d,/쓰러졌다!/.test(t)?1300:1000):d)};
  BM=step;skipFn=step;step()};
 
 /* ---------- 더블 배틀: 마지막으로 쓰러진 적 기록 ---------- */
