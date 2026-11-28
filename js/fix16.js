@@ -5,7 +5,7 @@ CHM.anemone.sk=[
  A('미미한 공격..','어딘가 힘이 빠진 공격을 한다.',5,{acc:95}),
  A('꽃 선물','꽃을 선물한다. 받은 쪽은 기운이 빠진다.',-15,{acc:80,gift:1}),
  B('고귀한 숙녀','숙녀의 품격으로 아군이 가볍게 움직인다.',0,{acc:75,evUp:3,kn:'타인 변화'})];
-CHM.taote.sk=[
+CHM.taotie.sk=[
  A('검술','당나라 시절부터 애용한 무기로 벤다.',35,{acc:95}),
  W('나태','상대에게 나태를 부여해 움직임을 둔하게 만든다.',0,{acc:95,slow:5,kn:'타인 변화'}),
  A('소멸','검게 변한 손으로 닿은 것을 가루로 만든다.',100,{acc:50,multi:[2,2],kn:'단일 공격'})];
@@ -21,7 +21,7 @@ CHM.jiyong.sk=[
 Object.assign(PROF,{
  anemone:{full:'아네모네',rom:'Anemone / 銀蓮花',aff:'세피로트 나무',sex:'여성',age:'외관상 18세',ht:'147cm',race:'이사야족',el:'火',abil:'영생을 누리는 능력',
   intro:'‘목의 신’ 메르헨의 보좌관으로, 유일하게 세피로트 나무에서 태어나지 않은 이사야족이다. 언제나 웃으면서 말끝을 올리고 요조숙녀같은 행동을 선보인다.'},
- taote:{full:'타오테',rom:'Tāotiè / 饕餮',aff:'글리샬라볼라스',sex:'남성',age:'외관상 21세',ht:'183cm',race:'사흉',el:'木',abil:'나태를 다루는 능력',
+ taotie:{full:'타오테',rom:'Tāotiè / 饕餮',aff:'글리샬라볼라스',sex:'남성',age:'외관상 21세',ht:'183cm',race:'사흉',el:'木',abil:'나태를 다루는 능력',
   intro:'‘금의 신’ 사마엘을 돕는 사흉 중 한 명. 전생의 정체는 송 루이후가 당나라 해결사로 활동하던 시절에 루이후를 도와줬던 조수 탕 하오위이다. 인간이었을 적과 달리 귀찮은 것을 싫어하며 개인주의자처럼 행동하지만, 루이후에게만은 이런 성향을 누그러뜨리고 있다.'},
  jarel:{full:'자렐',rom:'Jarrell / 贾雷尔',aff:'예르모 행성',sex:'남성',age:'470세',ht:'182cm',race:'예르모족',el:'土',abil:'풀을 다루는 능력',
   intro:'과거 예르모 행성 전역에 유행했던 역병으로부터 예르모족을 구한 &lt;예르모의 영웅&gt;이었으나, 현재는 왠지 예르모족의 비난을 받고 있다. 예르모 행성에 오덕 침식 마물이 나타난 후로 자취를 감췄다.'},
@@ -91,7 +91,7 @@ perform=function(a,d,idx,ev){
   if(guard())return;
   const g=Math.min(d.maxhp-d.hp,hitCalc(a,d,{p:15,ign:0},k).dmg);
   if(g>0){d.hp+=g;say(`${d.ch.name} HP ${g} 회복`,{pop:{side:you,v:'+'+g,cls:'heal'},fx:{side:you,k:'heal'},sfx:'heal'})}
-  d.dbStk=Math.min(5,(d.dbStk||0)+1);
+  d.dbStk=Math.min(2,(d.dbStk||0)+1);
   say(`${d.ch.name} 공격력 저하 (${d.dbStk}단계)`,{pop:tx(you,'공격력 DOWN x'+d.dbStk),fx:{side:you,k:'down',c:'#ad8fd8'},sfx:'down'})}
  if(sk.slow){
   d.slowStk=Math.min(sk.slow,(d.slowStk||0)+1);d.slowT=25;
@@ -116,5 +116,5 @@ perform=function(a,d,idx,ev){
 const _ai16=aiPick;
 aiPick=function(e,p){const r=_ai16(e,p);
  if(r>=0){const s=e.ch.sk[r];
-  if(s&&((s.evUp&&e.evStk>=s.evUp)||(s.slow&&p.slowStk>=s.slow)||(s.gift&&p.dbStk>=5)||(s.rndSeal&&p.seal!==null&&p.seal!==undefined)||(s.absorb&&e.hp>e.maxhp*.5)))return 0}
+  if(s&&((s.evUp&&e.evStk>=s.evUp)||(s.slow&&p.slowStk>=s.slow)||(s.gift&&p.dbStk>=2)||(s.rndSeal&&p.seal!==null&&p.seal!==undefined)||(s.absorb&&e.hp>e.maxhp*.5)))return 0}
  return r};

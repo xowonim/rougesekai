@@ -62,11 +62,11 @@ const CH=[
  A('삼지창','삼지창으로 전투에 임한다.',55),
  A('눈폭탄','눈으로 만든 폭탄으로 행동을 제약한다.',35,{stun:30}),
  A('백호의 힘','이성을 잃고 백호의 힘을 발현한다.',90,{recoil:25})]},
-{id:'ganghyeon',name:'강 현',el:'水',star:5,race:'원향족',role:'m',sk:[
+{id:'hyun',name:'강 현',el:'水',star:5,race:'원향족',role:'m',sk:[
  A('창바늘','창처럼 긴 바늘로 찌른다.',55),
  W('독심','뱀으로 심리를 파악해 허점을 찌른다.',20),
  W('탐색','상대의 과거를 탐색해 약점을 알아낸다.',30)]},
-{id:'seungah',name:'강승아',el:'水',star:5,race:'원향족',role:'a',sk:[
+{id:'seunga',name:'강승아',el:'水',star:5,race:'원향족',role:'a',sk:[
  A('수리검','수리검과 표창을 던진다.',50),
  Z('순간이동','거북을 이용해 빠르게 이동한다.'),
  A('조종','거북으로 상대의 행동을 조종한다.',40,{stun:50})]},
@@ -75,7 +75,7 @@ const CH=[
 {id:'esquel',name:'에스쿠엘',el:'水',star:4,race:'이사야족',role:'u',sk:[
  H('재생','생명력을 소모해 부상을 치유한다.',40),
  H('자가재생','소모한 생명력을 회복한다.',60,{pp:1})]},
-{id:'taote',name:'타오테',el:'木',star:4,race:'사흉',role:'a',sk:[
+{id:'taotie',name:'타오테',el:'木',star:4,race:'사흉',role:'a',sk:[
  A('검술','당나라 시절부터 애용한 무기로 벤다.',55),
  W('나태','상대에게 나태를 부여한다.',30),
  A('소멸','검게 변한 손으로 닿은 것을 가루로 만든다.',75,{ign:.5})]},
@@ -236,7 +236,7 @@ const BASIC={n:'저항',t:'a',p:30,d:''};
 
 /* ---------- 지역 ---------- */
 const MAPS=[
- {id:'iwonhyang',name:'이원향',g:['#4a2530','#1a1018'],pool:['hwanhee','baekdo','ganghyeon'],boss:'seungah'},
+ {id:'iwonhyang',name:'이원향',g:['#4a2530','#1a1018'],pool:['hwanhee','baekdo','hyun'],boss:'seunga'},
  {id:'sephirot',name:'세피로트 나무',g:['#2c5a45','#101c18'],pool:['anemone','esquel'],boss:'marchen'},
  {id:'yermo',name:'예르모',g:['#3e5a2a','#121a10'],pool:['berdi','oscar','yormungand','hati'],boss:'jarel'},
  {id:'aram',name:'아람',g:['#6a2828','#1e0e0e'],pool:['hongryeon','jiyong','jaehee'],boss:'haekyung'},
@@ -245,9 +245,10 @@ const MAPS=[
  {id:'borneo',name:'보르네로',g:['#2a4a6a','#0e1620'],pool:['shagall','cannon','zed','louis','bif','nail'],boss:'azitae'},
  {id:'dendro',name:'덴드론고니아',g:['#5a5a2a','#1a1a0e'],pool:['ketos','astel','nephile'],boss:'kerma'},
  {id:'void',name:'허공',g:['#2a2a46','#0a0a14'],pool:['hati_fin','bibi','baekho'],boss:'eris'},
- {id:'glisha',name:'글리샬라볼라스',g:['#3a2a4a','#120e1a'],pool:['taote','honton'],boss:'samael'}
+ {id:'glisha',name:'글리샬라볼라스',g:['#3a2a4a','#120e1a'],pool:['taotie','honton'],boss:'samael'}
 ];
 const mapOf=w=>MAPS[Math.floor((w-1)/CFG.MAP_STAGES)%MAPS.length];
 
 /* ---------- 속성 ---------- */
 const EC={'木':'var(--木)','火':'var(--火)','土':'var(--土)','金':'var(--金)','水':'var(--水)','？':'var(--无)','+':'var(--阳)','-':'var(--阴)'};
+
