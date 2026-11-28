@@ -1,4 +1,4 @@
-/* 31차 수정: '세상' 지도 정리 (등장 커릭터 · 보스 · 필드 효과 · 이동 확률) */
+/* 31차 수정: '세상' 지도 정리 (등장 캐릭터 · 보스 · 필드 효과 · 이동 확률) */
 (function(){
 /* ---------- 지역별 등장 캐릭터 (스킬트리의 '등장 지역' 기준) ---------- */
 const TAG={
@@ -33,9 +33,9 @@ REG.anak.next=[['sephirot',100]];
 
 /* ---------- 안내 문구 ---------- */
 REG.iwonhyang.tip='눈이 내린다. 턴마다 전체 HP의 3%를 잃는다.';
-REG.glisha.tip='무더운 날씨. 전체 공격력이 30% 오르고, 낙뇌가 떨어질 수 있다.';
+REG.glisha.tip='무더운 날씨. 전체 공격력이 30% 오르고, 낙뢰가 떨어질 수 있다.';
 REG.sephirot.tip='턴마다 전체 HP가 1% 회복된다.';
-REG.badr.tip='안개가 낂다. 전체 회피율 10%, 공격력 10% 상승. 모든 공격에 방어무시 10%가 붙는다.';
+REG.badr.tip='안개가 낀다. 전체 회피율 10%, 공격력 10% 상승. 모든 공격에 방어무시 10%가 붙는다.';
 REG.anak.tip='타마키 오토리, 강 현, 강승아의 ③ 스킬을 쓸 수 없다.';
 
 /* ---------- 보스 스테이지는 보스 목록에서 선택 ---------- */
@@ -54,7 +54,7 @@ const _st31=st;
 st=function(f,k){
  let v=_st31(f,k);
  if(k==='atk'){if(rg()==='glisha')v*=1.3;else if(rg()==='badr')v*=1.1}
- /* 아낙의 고유차원: 예전의 공격 · 방어 10% 감소는 없앗다 */
+ /* 아낙의 고유차원: 예전의 공격 · 방어 10% 감소는 없앴다 */
  if(f.side==='p'&&rg()==='anak'&&(k==='atk'||k==='def'))v/=.9;
  return v};
 const _hc31=hitCalc;
@@ -96,5 +96,5 @@ endOfTurn=function(ev){
   const t=alive[Math.floor(Math.random()*alive.length)];
   if(t.hp>1&&!t.dive){
    const d=Math.min(Math.max(1,Math.round(t.maxhp*.1)),t.hp-1);t.hp-=d;
-   evx31(ev,`낙뇌가 ${t.ch.name}에게 떨어졌다. ${d} 피해`,t,'-'+d,{fx:{k:'zap',c:'#f2d04a'},sfx:'zap'})}}};
+   evx31(ev,`낙뢰가 ${t.ch.name}에게 떨어졌다. ${d} 피해`,t,'-'+d,{fx:{k:'zap',c:'#f2d04a'},sfx:'zap'})}}};
 })();
