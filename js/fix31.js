@@ -83,6 +83,8 @@ aiPick=function(e,p){
  if(r>=0&&rg()==='anak'&&BLOCK.has(e.ch.sk[r]))return 0;
  return r};
 const evx31=(ev,t,f,v,o)=>{o=o||{};ev.push({t,s:snap(),raw:true,pop:v!==undefined?{side:(run.dbl?(f.pos||f.side):f.side),v,cls:o.cls||'tx'}:undefined,fx:o.fx?{side:(run.dbl?(f.pos||f.side):f.side),...o.fx}:undefined,sfx:o.sfx})};
+const _dbt31=dblTurn;
+dblTurn=function(acts){if(run)run.ltDone=false;return _dbt31(acts)};
 const _eot31=endOfTurn;
 endOfTurn=function(ev){
  const L=[run.party[run.active],run.enemy].filter(Boolean);
@@ -92,8 +94,11 @@ endOfTurn=function(ev){
   alive.forEach(f=>{
    const v=Math.max(1,Math.round(f.maxhp*.01)),b=f.hp;f.hp=Math.min(f.maxhp,f.hp+v);const g=f.hp-b;
    if(g>0)evx31(ev,`${f.ch.name} HP ${g} 회복`,f,'+'+g,{cls:'heal',fx:{k:'heal'},sfx:'heal'})})}
- else if(R==='glisha'&&alive.length&&Math.random()<.2){
-  const t=alive[Math.floor(Math.random()*alive.length)];
+ else if(R==='glisha'&&!(run.dbl&&run.ltDone)){
+  run.ltDone=true;
+  if(Math.random()>=.2)return;
+  const pool=run.dbl?[...dAllies(),...dFoes()].filter(f=>f.hp>0):alive;
+  const t=pool[Math.floor(Math.random()*pool.length)];if(!t)return;
   if(t.hp>1&&!t.dive){
    const d=Math.min(Math.max(1,Math.round(t.maxhp*.1)),t.hp-1);t.hp-=d;
    evx31(ev,`낙뢰가 ${t.ch.name}에게 떨어졌다. ${d} 피해`,t,'-'+d,{fx:{k:'zap',c:'#f2d04a'},sfx:'zap'})}}};
