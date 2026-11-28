@@ -35,7 +35,8 @@ paintInfo=function(s,fl,popv){_pi37(s,fl,popv);
   let r=e.nextElementSibling;
   if(!r||!r.classList.contains('stm')){r=document.createElement('div');r.className='stm';e.insertAdjacentElement('afterend',r)}
   let h='';
-  if(m)['atk','def','spd'].forEach(k=>{const n=m[k];if(!n)return;
+  if(m)['atk','def','spd'].forEach(k=>{const n=m[k]|0;
+   if(!n){h+=`<span>${CS[k][0]}<i style="color:var(--dim)">—</i></span>`;return}
    const up=n>0,c=up?CS[k][1]:DN;
    h+=`<span>${CS[k][0]}<i style="color:${c}">${(up?'▲':'▼').repeat(Math.abs(n))}</i></span>`});
   if(r.innerHTML!==h)r.innerHTML=h})}catch(e){}};
