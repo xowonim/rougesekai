@@ -77,7 +77,7 @@ snap=function(){
  const s=_snap27();
  try{
   s.bw=!!(run&&run.bw);
-  const add=(o,f)=>{if(!o||!f)return;o.st=o.st||{};if(f.sealT>0)o.st.seal=true;if(f.ladySpd>0||f.tpStk>0)o.st.spd=true};
+  const add=(o,f)=>{if(!o||!f)return;o.st=o.st||{};if(f.sealT>0)o.st.seal=true;if(f.ladySpd>0)o.st.spd=true};
   if(run.dbl){add(s.p,dA());add(s.e,run.eA||run.enemy);add(s.q,dB());add(s.f,run.enemy2)}
   else{add(s.p,run.party[run.active]);add(s.e,run.enemy)}
  }catch(e){}
@@ -85,7 +85,7 @@ snap=function(){
 const _stIc27=stIc;
 stIc=function(f){let h=_stIc27(f);
  if(f.sealT>0&&!(f.seal!==null&&f.seal!==undefined))h+=`<span>${svg('seal')}</span>`;
- if((f.ladySpd>0||f.tpStk>0)&&!(f.spdB>0))h+=`<span>${svg('buff')}</span>`;
+ if(f.ladySpd>0&&!(f.spdB>0))h+=`<span>${svg('buff')}</span>`;
  return h};
 const _pi27=paintInfo;
 paintInfo=function(s,fl,popv){_pi27(s,fl,popv);try{document.body.classList.toggle('bw',!!(s&&s.bw))}catch(e){}};
