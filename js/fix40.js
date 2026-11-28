@@ -22,4 +22,10 @@ playEvents=function(ev,done){
   seg(a,ev.length)
  }catch(err){}
  return _pe40(ev,done)};
+/* 흑백 필드 중에는 날씨 · 지역 효과 피해가 들어오지 않는다 */
+const _eot40=endOfTurn;
+endOfTurn=function(ev){
+ if(run&&run.bw){const f=run.field,r=run.region;run.field=null;run.region='';
+  try{return _eot40(ev)}finally{run.field=f;run.region=r}}
+ return _eot40(ev)};
 })();
