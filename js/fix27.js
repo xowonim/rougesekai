@@ -7,11 +7,11 @@ const EL_O={'火':.5,'水':.5,'木':2,'金':2};
 CHM.hyun.sk=[
  A('창바늘','창처럼 긴 바늘로 찌른다. 2회 연속으로 공격한다.',55,{acc:90,multi:[2,2]}),
  W('독심','뱀으로 심리를 파악해 허점을 찌른다. 2턴간 상대의 ②, ③ 스킬을 봉인한다.',0,{acc:85,sealX:2,mp:12,kn:'상대 변화'}),
- A('탐색','상대의 과거를 탐색한다. 첫 턴에는 시간이 멈춰 흑백 필드가 되고, 다음 턴에 10회 연속으로 공격하며 필드가 풀린다.',50,{acc:100,sc:'범위',multi:[10,10],bw:1,mp:22})];
+ A('탐색','상대의 과거를 탐색한다. 사용한 턴에 시간이 멈춰 흑백 필드가 되고, 한 턴이 지난 다음 턴에 필드가 풀리며 10회 연속으로 공격한다.',50,{acc:100,sc:'범위',multi:[10,10],bw:1,mp:22})];
 CHM.seunga.sk=[
  A('쿠나이','쿠나이와 표창을 던진다.',25,{acc:90,multi:[2,5]}),
  Z('순간이동','거북을 이용해 빠르게 이동한다. 1턴간 공격을 피하고, 속도가 3% 오른다. (최대 10중첩)',{tp:1,mp:8}),
- A('관망하는 자세','가만히 지켜보다 한꺼번에 쏟아낸다. 첫 턴에는 시간이 멈춰 흑백 필드가 되고, 다음 턴에 10회 연속으로 공격하며 필드가 풀린다.',55,{acc:100,sc:'범위',multi:[10,10],bw:1,mp:18})];
+ A('관망하는 자세','가만히 지켜보다 한꺼번에 쏟아낸다. 사용한 턴에 시간이 멈춰 흑백 필드가 되고, 한 턴이 지난 다음 턴에 필드가 풀리며 10회 연속으로 공격한다.',55,{acc:100,sc:'범위',multi:[10,10],bw:1,mp:18})];
 CHM.anemone.sk=[
  A('미미한 공격..','어딘가 힘이 빠진 공격을 한다. 火 · 水에게는 약하고 木 · 金에게는 강하다.',5,{acc:95,tm:EL_O}),
  A('선물 배달','선물을 배달한다. 받은 쪽은 기운이 빠진다. (공격력 10% 저하, 최대 2중첩)',-15,{acc:70,gift:1,mp:8}),
@@ -54,7 +54,7 @@ function inflict(d,k,ev){
 
 /* ---------- 스킬 상태 ---------- */
 const _rbs27=resetBattleState;
-resetBattleState=function(f){_rbs27(f);f.sealT=0;f.ladySpd=0;f.ladyT=0;f.ladyEvPrev=0;f.tpStk=0;f.eqSpent=0;f.bwNew=false};
+resetBattleState=function(f){_rbs27(f);f.sealT=0;f.ladySpd=0;f.ladyT=0;f.ladyEvPrev=0;f.tpStk=0;f.eqSpent=0;f.bwNew=false;f.bwWait=0};
 const _cl27=cleanse;
 cleanse=function(f){const had=_cl27(f)||(f.sealT>0);f.sealT=0;return had};
 const _st27=st;
@@ -110,6 +110,7 @@ function body(a,d,idx,ev){
  /* 흑백 필드를 여는 2턴 스킬 */
  if(sk.bw){
   if(run.areaSub){if(a.bwNew)return;return _perf27(a,d,idx,ev)}
+  if(pendNow&&!a.bwNew&&a.bwWait>0){a.bwWait--;return}
   if(pendNow&&!a.bwNew){
    a.pend=null;releaseBw(ev,a);
    const m=a.mp;_perf27(a,d,idx,ev);a.mp=m;const l=a.last;
@@ -124,7 +125,7 @@ function body(a,d,idx,ev){
    return}
   if(!pendNow){
    const r=castOnly(a,d,idx,ev,sk);
-   if(r.cast){a.pend=idx;a.bwNew=true;run.bw=true;
+   if(r.cast){a.pend=idx;a.bwNew=true;a.bwWait=1;run.bw=true;
     evx(ev,'시간이 멈췄다. 필드가 흑백으로 변한다. 이 동안 모든 피해가 0이 된다.',a,'흑백 필드',{fx:{k:'down',c:'#9a9a9a'},sfx:'down',d:900})}
    return}
   return}
