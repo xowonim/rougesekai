@@ -2,8 +2,8 @@
 
 /* ---------- 스킬 데이터 ---------- */
 CHM.haekyung.sk=[
- A('우산','우산을 무기 삼아 휘두른다.',40,{acc:100}),
- H('요리','오토리도 인정한 미슐랭 손으로 HP나 MP를 회복한다.',35,{acc:80,rnd:1,kn:'타인 변화',mp:14}),
+ A('우산','우산을 무기 삼아 휘둔다.',40,{acc:100}),
+ H('요리','오토리도 인정한 미슜랭 손으로 HP나 MP를 회복한다.',35,{acc:80,rnd:1,kn:'타인 변화',mp:14}),
  W('기억','상대의 기억을 조작해 마지막으로 쓴 기술을 잊게 한다.',0,{acc:100,seal:1,kn:'타인 변화',mp:12})];
 CHM.hongryeon.sk=[
  H('재생','생명력을 불어넣어 상처를 아물게 한다.',40,{acc:100,kn:'타인 변화'}),
@@ -11,8 +11,8 @@ CHM.hongryeon.sk=[
  W('사랑','무한한 애정으로 상대가 싸울 마음을 잃게 한다.',0,{acc:60,love:1,kn:'타인 변화',mp:12})];
 CHM.bif.sk=[
  A('수검','물로 빚은 검으로 벤다.',40,{acc:100}),
- A('잠수','물속으로 잠수했다가 튀어올라 공격한다.',80,{acc:100,dive:1,mp:16}),
- H('정화','깨끗한 물로 몸을 씻어 이상을 없앤다.',0,{acc:60,clean:1,kn:'자기 변화'})];
+ A('잠수','물속으로 잠수했다가 튀어오른다.',80,{acc:100,dive:1,mp:16}),
+ H('정화','깨끗한 물로 몸을 씨어 이상을 없앤다.',0,{acc:60,clean:1,kn:'자기 변화'})];
 
 /* ---------- 스킬 표시 ---------- */
 skFace=function(ch,i,s,lv,tag,mp){const c=mp?mpCost(s,i):0;
@@ -60,7 +60,7 @@ perform=function(a,d,idx,ev){
   const area=sk.sc==='범위';let landed=0;
   for(let n=0;n<hits&&d.hp>0;n++){
    const acc=(sk.acc!==undefined?sk.acc:95)-(a.shock?50:0)-(fog?10:0);
-   if(Math.random()*100>=acc){say('빗나갔다.',{pop:tx(you,'MISS'),sfx:'miss'});continue}
+   if(n===0||sk.multi===undefined){if(Math.random()*100>=acc){say('빗나갔다.',{pop:tx(you,'MISS'),sfx:'miss'});break}}
    landed++;
    const h=hitCalc(a,d,sk,k);
    if(a.love){h.dmg=0;h.crit=false}
