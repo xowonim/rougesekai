@@ -35,7 +35,7 @@ CHM.anax.sk=[
 CHM.jin.sk=[
  A('부조화의 기운','부조화의 기운을 투척한다. 필드의 모두에게 부조화 10%가 쌓인다.',50,{acc:95,disAll:10}),
  A('참화','부조화를 마물화해 생성한다. 3회 연속 공격하고 필드의 모두에게 부조화 15%가 쌓인다.',30,{acc:85,sc:'범위',multi:[3,3],disAll:15}),
- A('부조화의 저주','자신의 부조화를 50% 소모한다. 5턴간 상대에게 지속 피해 5%, 필드의 모두에게 매 턴 부조화 6%.',70,{acc:100,needDis:1,curse:1,kn:'필드 변화'})];
+ A('부조화의 저주','자신의 부조화를 50% 소모한다. 5턴간 상대에게 지속 피해 5%, 필드의 모두에게 매 턴 부조화 6%.',70,{acc:100,sc:'범위',needDis:1,curse:1,kn:'필드 변화'})];
 CHM.cheonryong.sk=[
  A('여의주','여의주를 검으로 만들어 벤다.',35,{acc:100}),
  Z('구름','여의주의 힘으로 구름을 만들어 잠시 날아오른다. 공격을 피한다.',{acc:100}),
@@ -206,7 +206,7 @@ function body(a,d,idx,ev){
   if(a.hp>0&&Math.random()<.5){a.stun=1;a.stunImm=0;evx(ev,`${josa(a.ch.name,'은/는')} 시간의 반동으로 기절했다.`,a,'기절',{fx:{k:'stun'},sfx:'stun'})}}
  /* 창조된 생명 */
  if(sk.regen3&&cast&&!fail){
-  const mates=a.side==='p'?run.party:[a];
+  const mates=a.side==='p'?run.party:(run.dbl?dFoes().filter(x=>x.hp>0):[a]);
   mates.forEach(f=>{if(f.hp<=0)f.hp=Math.round(f.maxhp*.5);else f.hp=f.maxhp;cleanse(f);f.regenT=5});
   evx(ev,'파티의 HP가 회복되고 상태이상이 사라졌다. 쓰러진 동료가 되살아난다. 5턴간 매 턴 HP가 조금씩 회복된다.',a,'생명 창조',{cls:'tx heal',fx:{k:'heal'},sfx:'heal',d:900})}
  /* 호루스의 눈 */
@@ -265,8 +265,9 @@ endOfTurn=function(ev){
   if(f.hp<=0)return;
   if(f.petriSlow>0)f.petriSlow--;
   if(f.petri>0){
-   const v=Math.max(1,Math.round(f.maxhp*.05)),b=f.hp;f.hp=Math.max(1,f.hp-v);const lost=b-f.hp;
+   const v=Math.max(1,Math.round(f.maxhp*.05)),b=f.hp;f.hp=Math.max(0,f.hp-v);const lost=b-f.hp;
    if(lost>0)evx(ev,`${f.ch.name} 석화 피해 ${lost}`,f,'-'+lost,{cls:'dot',sfx:'hit'});
+   if(f.hp<=0){evx(ev,`${josa(f.ch.name,'은/는')} 쓰러졌다.`,f,undefined,{sfx:'ko'});return}
    f.petriAge++;
    if(f.petriAge>=2&&Math.random()<.1){f.petri=0;f.petriSlow=2;evx(ev,`${josa(f.ch.name,'은/는')} 석화에서 풀렸다.`,f,'석화 해제',{sfx:'up'})}}
   if(f.rage){f.rageAge++;
