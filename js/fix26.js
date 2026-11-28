@@ -22,7 +22,7 @@ CHM.marchen.sk=[
   aiCond:f=>f.hp<f.maxhp*.5&&!(f.regenT>0)})];
 CHM.amir.sk=[
  A('게브의 낫','낫을 휘둘러 상대의 방어를 깎아낸다. (최대 5중첩)',65,{acc:90,sc:'범위',defDn:1}),
- A('엔네아드의 기적','출전한 모든 캐릭터의 공격력 · 방어력 · 속도 · 회피율 변화를 반대로 뒤집는다.',95,{acc:100,reverse:1,kn:'필드 변화'}),
+ A('엔네아드의 기적','출전한 모든 캐릭터의 공격력 · 방어력 · 속도 변화를 반대로 뒤집는다.',95,{acc:100,reverse:1,kn:'필드 변화'}),
  B('호루스의 눈','2턴간 무적이 되고, 2턴간 방어를 70% 무시한다.',0,{acc:100,horus:1,noTgt:1,kn:'자기 변화',aiCond:f=>!(f.inv>0)&&f.hp<f.maxhp*.7})];
 CHM.samael.sk=[
  A('영대','입을 맞춰 상대의 생명력을 흡수한다.',55,{acc:100,dr:50}),
@@ -93,8 +93,7 @@ function reverseStats(f){
  [f.m,f.d]=[f.d,f.m];[f.mT,f.dT]=[f.dT||0,f.mT||0];
  const up=f.spdStk||0,dn=f.slowStk||0;f.spdStk=dn;f.slowStk=up;[f.spdT,f.slowT]=[f.slowT||0,f.spdT||0];
  if(f.spdB>0){f.slowStk=Math.min(5,Math.max(f.slowStk,Math.round(f.spdB/.1)));f.slowT=Math.max(f.slowT||0,f.spdBT||0);f.spdB=0;f.spdBT=0}
- if(f.dbStk>0){const dn2=typeof ATK_DN!=='undefined'?ATK_DN:.1;f.m.atk=Math.max(f.m.atk,dn2*f.dbStk);f.mT=Math.max(f.mT||0,3);f.dbStk=0}
- f.evStk=-(f.evStk||0)}
+ if(f.dbStk>0){const dn2=typeof ATK_DN!=='undefined'?ATK_DN:.1;f.m.atk=Math.max(f.m.atk,dn2*f.dbStk);f.mT=Math.max(f.mT||0,3);f.dbStk=0}}
 
 /* ---------- 전투 상태 ---------- */
 const _rbs26=resetBattleState;
