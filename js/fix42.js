@@ -44,7 +44,7 @@ makeEnemy=function(w){
  const e=_me42(w);
  try{
   const id=e.ch.id;
-  if(id==='wolfmen'||id==='wolfboss'){const c=rr(COLS);e.ch=Object.assign({},e.ch,{el:c[1]});e.dc=c[0]}
+  if(id==='wolfmen'||id==='wolfboss'){const c=rr(COLS);e.ch=Object.assign({},e.ch,{el:rr(EL5)});e.dc=c[0]}
   else if(id==='bestbeast')e.ch=Object.assign({},e.ch,{el:rr(EL5)});
   else if(id==='icingbaekdo')e.frzRes=1;
  }catch(x){}
@@ -131,10 +131,10 @@ aiPick=function(e,p){
  try{return _ai42(e,p)}finally{MC=prev}};
 
 /* ---------- 지역 · 차원 ---------- */
-const rep=l=>l.flatMap(([id,w])=>Array(w).fill(id));
 const normal=(npc,f)=>{
  const o=[[50,{ids:[npc]}]];
- [[4,20],[5,30]].forEach(([s,r])=>{const l=f[s]||[];if(l.length)o.push([r,{ids:rep(l)}])});
+ /* 같은 ★ 안에서는 모두 같은 확률 / 나올 캐릭터가 아직 없는 칸은 일반 몬스터로 채운다 */
+ [[4,20],[5,30]].forEach(([s,r])=>{const l=(f[s]||[]).map(x=>x[0]);o.push([r,{ids:l.length?l:[npc]}])});
  return o};
 const bossL=l=>l.map(([id,w])=>[w,{ids:[id]}]);
 REG.nornir={id:'nornir',name:'노르니르',g:['#2b2f63','#090a18'],tip:'',
