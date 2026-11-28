@@ -85,6 +85,7 @@ function body(a,d,idx,ev){
   const m0=a.mp,r=castOnly(a,d,idx,ev,sk);a.mp=m0;
   if(r.fail)r.mine.forEach(e=>{if(e.t==='효과가 없었다.'&&e.pop){e.pop={...e.pop,side:S29(d)};e.raw=true}});
   if(!r.cast||r.fail||d.hp<=0)return;
+  if(d.frzRes){evx(ev,`${d.ch.name}에게는 효과가 없다.`,d,'효과 없음',{sfx:'miss'});return}
   a.frost=Math.max(0,(a.frost||0)-3);
   d.ice=Math.min(3,(d.ice||0)+1);
   evx(ev,`${d.ch.name} 얼음 결정 ${d.ice}개`,d,'얼음 결정 x'+d.ice,{fx:{k:'down',c:'#9ad0f0'},sfx:'down'});
@@ -103,7 +104,7 @@ function body(a,d,idx,ev){
  if(sk.disCut&&landed&&d.hp>0&&(d.dis||0)>0){
   const b=d.dis;d.dis=Math.max(0,b-sk.disCut);
   evx(ev,`${d.ch.name} 부조화 ${d.dis}%`,d,'부조화 -'+(b-d.dis)+'%',{fx:{k:'up',c:'#8fd0b0'},sfx:'up'})}
- if(sk.frz&&landed&&d.hp>0&&!d.frz&&Math.random()*100<sk.frz){
+ if(sk.frz&&landed&&d.hp>0&&!d.frz&&!d.frzRes&&Math.random()*100<sk.frz){
   d.frz=1;d.frzAge=0;
   evx(ev,`${josa(d.ch.name,'은/는')} 꽁꽁 얼어붙었다.`,d,'빙결',{fx:{k:'down',c:'#9ad0f0'},sfx:'down'})}}
 perform=function(a,d,idx,ev){

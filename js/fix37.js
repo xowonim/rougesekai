@@ -6,8 +6,8 @@ s.textContent='.stt:empty{display:none}.stm{display:flex;justify-content:flex-st
 document.head.appendChild(s);
 function pct(f,k){
  /* 기운(구슬) · 날씨 · 지역 효과로 인한 증감은 표시하지 않는다 */
- const ob=run.orbs,fl=run.field,rg=run.region;
- run.orbs={};run.field=null;run.region='';
+ const ob=run.orbs,fl=run.field,rg=run.region,wn=f.wine;
+ run.orbs={};run.field=null;run.region='';f.wine=0;
  try{
   let cur;
   if(k==='spd'){const cs=f.csFirst,pd=f.pend;f.csFirst=false;f.pend=null;try{cur=st(f,k)}finally{f.csFirst=cs;f.pend=pd}}
@@ -15,7 +15,7 @@ function pct(f,k){
   const base=f[k]*((f.side==='p'&&run&&run.buf)?1+(run.buf[k]||0):1);
   if(!(base>0))return 0;
   return (cur/base-1)*100
- }catch(e){return 0}finally{run.orbs=ob;run.field=fl;run.region=rg}}
+ }catch(e){return 0}finally{run.orbs=ob;run.field=fl;run.region=rg;f.wine=wn}}
 function calc(f){
  if(!f)return null;
  const o={};['atk','def','spd'].forEach(k=>{
