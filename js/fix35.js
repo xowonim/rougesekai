@@ -2,7 +2,9 @@
 (function(){
 const s=document.createElement('style');
 s.textContent=`.msgb{width:100%;box-sizing:border-box;min-height:3.6em;display:flex;align-items:center;padding:.7em 1.4em;font-size:1.1em;letter-spacing:.04em;line-height:1.5;background:rgba(10,12,16,.55);border:1px solid rgba(255,255,255,.14);animation:msgin .18s ease-out}
-@keyframes msgin{from{opacity:.2;transform:translateY(.25em)}}`;
+@keyframes msgin{from{opacity:.2;transform:translateY(.25em)}}
+.msgb{position:relative}.msgb::after{content:'\\25BC';position:absolute;right:1.1em;bottom:.6em;font-size:.7em;color:var(--dim);animation:msgbk 1s ease-in-out infinite}
+@keyframes msgbk{50%{opacity:.25}}`;
 document.head.appendChild(s);
 
 /* ---------- 문구 변환 ---------- */
@@ -44,9 +46,9 @@ playEvents=function(ev,done){
   let t='';try{t=e.disp!==undefined?e.disp:disp(e)}catch(err){}
   if(t)msg(t);
   if(e.act)showAct(e.act);if(e.lunge)lunge(e.lunge);if(e.fx)playFx(e.fx);if(e.shake)shake();if(e.sfx)sfx(e.sfx);
-  let d=e.d||((e.pop||e.fx)?700:450);
-  if(t){const m=e.act?900:/쓰러졌다!|쓰러뜨렸다/.test(t)?1000:650;if(d<m)d=m}
-  timer=setTimeout(step,d)};
+  /* 문구가 있는 줄은 클릭해야 다음으로 넘어간다 */
+  if(t)return;
+  timer=setTimeout(step,e.d||((e.pop||e.fx)?700:450))};
  skipFn=step;step()};
 
 /* ---------- 더블 배틀: 마지막으로 쓰러진 적 기록 ---------- */
